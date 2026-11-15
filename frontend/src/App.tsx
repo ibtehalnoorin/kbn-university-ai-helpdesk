@@ -270,7 +270,7 @@ export default function App() {
           setError({
             title: "The answer did not arrive",
             message:
-              "The local model did not finish in time. Please try the question again.",
+              "The assistant did not finish in time. Please try the question again.",
           });
           return;
         }
@@ -499,7 +499,7 @@ export default function App() {
           <h1 className="mt-4 font-display text-xl font-semibold text-kbn-950">
             KBN University Helpdesk
           </h1>
-          <p className="mt-1 text-sm text-stone-500">Connecting to the local service…</p>
+          <p className="mt-1 text-sm text-stone-500">Connecting to the helpdesk…</p>
         </div>
       </div>
     );

@@ -96,7 +96,7 @@ export function EmptyState({
 
       <p className="relative mt-6 flex items-center gap-1.5 text-[0.68rem] text-stone-400">
         <span className="h-1.5 w-1.5 rounded-full bg-kbn-400" />
-        Private and on-device · Qwen3:8B · 38 indexed KBN records
+        Please don&apos;t share personal details · 38 indexed KBN records
       </p>
     </div>
   );

@@ -91,6 +91,15 @@ class Settings(BaseSettings):
     ollama_check_timeout_seconds: float = 8.0
 
     max_pending_requests: int = 16
+
+    # Abuse protection (in-memory, single instance).
+    rate_limit_per_minute: int = 12
+    rate_limit_sessions_per_hour: int = 20
+    # Groq's free tier allows roughly 1K requests/day; stay under it. 0 = LLM off
+    # (fast-path and fixed fallback answers still work).
+    daily_llm_budget: int = 900
+    # Number of reverse proxies (Render, Cloudflare...) that append to X-Forwarded-For.
+    trusted_proxy_hops: int = 1
     max_sessions: int = 100
     max_messages_per_session: int = 500
 

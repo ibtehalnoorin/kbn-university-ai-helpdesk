@@ -6,7 +6,8 @@ import re
 
 from fastapi import Request
 
-from app.errors import NotFoundError, ValidationAppError
+from app.errors import NotFoundError, RateLimitedError, ValidationAppError
+from app.services.rate_limit import client_ip as _client_ip
 
 _CLIENT_ID = re.compile(r"^[A-Za-z0-9_-]{16,80}$")
 
@@ -28,3 +29,21 @@ def require_owner(request: Request, session_id: str) -> None:
         raise NotFoundError(
             f"Session '{session_id}' was not found.", details={"session_id": session_id}
         )
+
+
+def _limit(request: Request, limiter_name: str, what: str) -> None:
+    limiter = getattr(request.app.state, limiter_name)
+    key = _client_ip(request, request.app.state.settings.trusted_proxy_hops)
+    if not limiter.allow(key):
+        raise RateLimitedError(
+            f"Too many {what}. Please wait a moment and try again.",
+            retry_after=limiter.retry_after(key),
+        )
+
+
+def limit_chat(request: Request) -> None:
+    _limit(request, "chat_limiter", "questions")
+
+
+def limit_new_sessions(request: Request) -> None:
+    _limit(request, "session_limiter", "new conversations")

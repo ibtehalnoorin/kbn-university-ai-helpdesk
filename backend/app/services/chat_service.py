@@ -13,6 +13,7 @@ from helpers import classify_intent
 
 from app.config import Settings
 from app.errors import (
+    DailyLimitError,
     RetrievalError,
     SessionBusyError,
     WorkerResultError,
@@ -103,7 +104,9 @@ class ChatService:
         store: SessionStore,
         retrieval: RetrievalService,
         worker: WorkerClient,
+        budget=None,
     ) -> None:
+        self.budget = budget
         self.settings = settings
         self.store = store
         self.retrieval = retrieval
@@ -113,6 +116,15 @@ class ChatService:
         self._background_tasks: set[asyncio.Task] = set()
         # Exact standalone questions only; follow-ups depend on session history.
         self._answer_cache: dict[str, tuple[float, dict]] = {}
+
+    def _submit(self, **kwargs):
+        """Submit to the LLM, spending one unit of the daily budget (fast paths never get here)."""
+        if self.budget is not None and not self.budget.try_consume():
+            raise DailyLimitError(
+                "The assistant has reached its daily limit. Please try again tomorrow, "
+                "or contact the university office directly."
+            )
+        return self.worker.submit(**kwargs)
 
     def is_busy(self, session_id: str) -> bool:
         lock = self._locks.get(session_id)
@@ -257,7 +269,7 @@ class ChatService:
         persona, base_prompt = classify_intent(message)
         system_prompt = f"{base_prompt}\n\n{grounding_policy()}"
         worker_key = self.store.worker_key_for(session_id)
-        future = self.worker.submit(
+        future = self._submit(
             worker_key=worker_key,
             query=message,
             kb_knowledge=result.context,
@@ -314,7 +326,7 @@ class ChatService:
         persona, base_prompt = classify_intent(request.message)
         system_prompt = f"{base_prompt}\n\n{general_policy()}"
         worker_key = self.store.worker_key_for(request.session_id)
-        future = self.worker.submit(
+        future = self._submit(
             worker_key=worker_key,
             query=request.message,
             kb_knowledge="",
@@ -634,7 +646,7 @@ class ChatService:
             "not answer the question, say so.\n"
         )
         worker_key = self.store.worker_key_for(request.session_id)
-        future = self.worker.submit(
+        future = self._submit(
             worker_key=worker_key,
             query=request.message,
             kb_knowledge="",

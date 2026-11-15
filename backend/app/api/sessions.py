@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, Depends, Request, status
 
-from app.api.deps import client_id, require_owner
+from app.api.deps import client_id, limit_new_sessions, require_owner
 from app.errors import SessionBusyError
 from app.schemas import (
     DeleteSessionResponse,
@@ -26,6 +26,7 @@ def _chat(request: Request):
     response_model=SessionDetail,
     status_code=status.HTTP_201_CREATED,
     summary="Create a conversation session",
+    dependencies=[Depends(limit_new_sessions)],
 )
 async def create_session(
     request: Request,

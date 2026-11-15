@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 
-from app.api.deps import require_owner
+from app.api.deps import limit_chat, require_owner
 from app.schemas import ChatRequest, ChatResponse
 
 router = APIRouter(tags=["chat"])
@@ -14,6 +14,7 @@ router = APIRouter(tags=["chat"])
     "/chat",
     response_model=ChatResponse,
     summary="Ask the KBN University AI Helpdesk",
+    dependencies=[Depends(limit_chat)],
     responses={
         409: {"description": "The session is already waiting for an answer."},
         502: {"description": "The local LLM worker returned an error."},

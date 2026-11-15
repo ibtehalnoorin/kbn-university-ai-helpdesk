@@ -43,7 +43,7 @@ function LateNotice({ startedAt }: { startedAt: number }) {
             Still working — {formatClock(elapsed)} elapsed
           </p>
           <p className="mt-0.5 text-amber-800/90">
-            The local model needs more time on CPU. The backend keeps generating
+            The assistant is taking longer than usual. The server keeps working
             and will save the verified answer to this conversation automatically.
             You can switch conversations and come back.
           </p>

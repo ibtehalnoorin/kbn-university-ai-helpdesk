@@ -265,8 +265,10 @@ export function Sidebar({
         <div className="border-t border-sand-200 bg-sand-50/60 px-4 py-3">
           <HealthPill health={health} loading={healthLoading} />
           <p className="mt-2 text-[0.6rem] leading-relaxed text-stone-400">
-            Answers are generated locally with Qwen3:8B and checked against the
-            KBN knowledge base. No chat data leaves this device.
+            Answers are written by an AI model using only KBN University&apos;s
+            published records, then checked against them. Questions may be
+            processed by a cloud AI service, so please don&apos;t share personal
+            details.
           </p>
         </div>
       </aside>

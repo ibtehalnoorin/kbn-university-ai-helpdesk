@@ -102,7 +102,7 @@ export function MessageBubble({ message }: { message: Message }) {
           </span>
           {responseTime ? <span>Answered in {responseTime}</span> : null}
           {llmTime ? (
-            <span title="Time spent by the local Qwen3:8B model">
+            <span title="Time spent by the language model">
               Model {llmTime}
             </span>
           ) : null}

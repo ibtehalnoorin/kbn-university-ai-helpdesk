@@ -72,3 +72,17 @@ class WorkerResultError(AppError):
 class StoreUnavailableError(AppError):
     status_code = 503
     code = "store_unavailable"
+
+
+class RateLimitedError(AppError):
+    status_code = 429
+    code = "rate_limited"
+
+    def __init__(self, message: str, retry_after: int = 60, **kwargs) -> None:
+        super().__init__(message, **kwargs)
+        self.retry_after = retry_after
+
+
+class DailyLimitError(AppError):
+    status_code = 503
+    code = "daily_limit_reached"

@@ -12,7 +12,7 @@ export function HealthPill({
     return (
       <div className="flex items-center gap-2 text-[0.68rem] text-stone-500">
         <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-        Checking local services…
+        Checking services…
       </div>
     );
   }
@@ -28,8 +28,10 @@ export function HealthPill({
 
   const chunks = health.components.chromadb.indexed_chunks;
   const expected = health.components.chromadb.expected_chunks;
+  const llm = health.components.llm ?? health.components.ollama;
+  const llmName = health.components.llm ? "AI model" : "Ollama";
   const detail = [
-    `Ollama: ${health.components.ollama.status}`,
+    `${llmName}: ${llm?.status ?? "unknown"}`,
     `ChromaDB: ${health.components.chromadb.status}${chunks ? ` (${chunks} chunks)` : ""}`,
     `Worker: ${health.worker.alive ? "running" : "idle"}`,
     `Protected files: ${health.protected_files.ok ? "intact" : "CHANGED"}`,

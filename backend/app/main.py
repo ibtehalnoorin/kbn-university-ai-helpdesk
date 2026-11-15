@@ -23,6 +23,7 @@ from app.config import PROJECT_ROOT, Settings, get_settings
 from app.errors import AppError
 from app.logging_config import configure_logging
 from app.services.chat_service import ChatService
+from app.services.rate_limit import DailyBudget, SlidingWindowLimiter
 from app.services.health_service import HealthService
 from app.services.retrieval import RetrievalService
 from app.services.store_factory import make_store
@@ -74,7 +75,13 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
                 worker_start_error = str(exc)
                 logger.exception("Could not start the LLM worker at startup")
 
-        chat_service = ChatService(settings, store, retrieval, worker)
+        chat_service = ChatService(
+            settings, store, retrieval, worker, budget=DailyBudget(settings.daily_llm_budget)
+        )
+        app.state.chat_limiter = SlidingWindowLimiter(settings.rate_limit_per_minute, 60)
+        app.state.session_limiter = SlidingWindowLimiter(
+            settings.rate_limit_sessions_per_hour, 3600
+        )
         health_service = HealthService(settings, retrieval, worker, store)
 
         app.state.settings = settings
@@ -155,6 +162,7 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
 
     @app.exception_handler(AppError)
     async def app_error_handler(request: Request, exc: AppError):
+        headers = {"Retry-After": str(exc.retry_after)} if hasattr(exc, "retry_after") else None
         return JSONResponse(
             status_code=exc.status_code,
             content={
@@ -164,6 +172,7 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
                     "details": jsonable_encoder(exc.details),
                 }
             },
+            headers=headers,
         )
 
     @app.exception_handler(RequestValidationError)
