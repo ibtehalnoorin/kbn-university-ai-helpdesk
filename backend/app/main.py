@@ -25,11 +25,27 @@ from app.logging_config import configure_logging
 from app.services.chat_service import ChatService
 from app.services.health_service import HealthService
 from app.services.retrieval import RetrievalService
-from app.services.session_store import SessionStore
+from app.services.store_factory import make_store
 from app.services.worker_client import WorkerClient
 from app.services.worker_factory import make_worker
 
 logger = logging.getLogger("kbn.api")
+
+
+async def _purge_once(store, days: int) -> None:
+    try:
+        removed = await asyncio.to_thread(store.purge_older_than, days)
+        if removed:
+            logger.info("Retention purge removed %s session(s) older than %s days", removed, days)
+    except Exception:
+        logger.exception("Retention purge failed")
+
+
+async def _retention_loop(store, days: int) -> None:
+    """Purge old conversations once a day (the first purge runs at startup)."""
+    while True:
+        await asyncio.sleep(24 * 3600)
+        await _purge_once(store, days)
 
 
 def create_app(settings_override: Settings | None = None) -> FastAPI:
@@ -46,11 +62,9 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
         retrieval = RetrievalService(settings)
         await asyncio.to_thread(retrieval.initialize)
 
-        store = SessionStore(
-            path=settings.session_store_file,
-            max_sessions=settings.max_sessions,
-            max_messages=settings.max_messages_per_session,
-        )
+        store = make_store(settings)
+        await _purge_once(store, settings.session_retention_days)
+        purge_task = asyncio.create_task(_retention_loop(store, settings.session_retention_days))
         worker = make_worker(settings, ollama_cls=WorkerClient)
         worker_start_error: str | None = None
         if settings.start_worker:
@@ -61,7 +75,7 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
                 logger.exception("Could not start the LLM worker at startup")
 
         chat_service = ChatService(settings, store, retrieval, worker)
-        health_service = HealthService(settings, retrieval, worker)
+        health_service = HealthService(settings, retrieval, worker, store)
 
         app.state.settings = settings
         app.state.retrieval = retrieval
@@ -84,9 +98,13 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
             yield
         finally:
             logger.info("Shutting down %s", settings.app_name)
+            purge_task.cancel()
             await chat_service.shutdown()
             worker.stop()
             retrieval.close()
+            close = getattr(store, "close", None)
+            if close:
+                close()
 
     app = FastAPI(
         title=startup_settings.app_name,

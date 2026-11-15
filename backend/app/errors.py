@@ -67,3 +67,8 @@ class WorkerTimeoutError(AppError):
 class WorkerResultError(AppError):
     status_code = 502
     code = "llm_error"
+
+
+class StoreUnavailableError(AppError):
+    status_code = 503
+    code = "store_unavailable"

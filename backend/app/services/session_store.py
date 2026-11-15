@@ -12,7 +12,7 @@ import logging
 import os
 import threading
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -200,3 +200,17 @@ class SessionStore:
     def count(self) -> int:
         with self._lock:
             return len(self._sessions)
+
+    def purge_older_than(self, days: int) -> int:
+        """Delete sessions untouched for ``days`` days; return how many were removed."""
+        cutoff = _now() - timedelta(days=days)
+        with self._lock:
+            stale = [sid for sid, rec in self._sessions.items() if rec.updated_at < cutoff]
+            for sid in stale:
+                del self._sessions[sid]
+            if stale:
+                self._save()
+            return len(stale)
+
+    def health(self) -> dict:
+        return {"status": "ok", "kind": "json", "sessions": self.count()}

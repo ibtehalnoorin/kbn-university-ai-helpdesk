@@ -104,6 +104,10 @@ class Settings(BaseSettings):
     )
 
     session_store_path: str = "backend/data/sessions.json"
+    # When set, chats are stored in Postgres (free Neon/Supabase) instead of the JSON file.
+    database_url: str = ""
+    session_retention_days: int = 30
+    database_connect_timeout_seconds: float = 5.0
     protected_manifest_path: str = "protected_files.sha256"
 
     # Tests can start the API without spawning the LLM worker.

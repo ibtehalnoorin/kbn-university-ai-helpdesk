@@ -79,10 +79,12 @@ class HealthService:
         settings: Settings,
         retrieval: RetrievalService,
         worker: WorkerClient,
+        store=None,
     ) -> None:
         self.settings = settings
         self.retrieval = retrieval
         self.worker = worker
+        self.store = store
 
     async def check(self) -> HealthResponse:
         use_groq = self.settings.llm_provider == "groq"
@@ -95,8 +97,13 @@ class HealthService:
         integrity_task = asyncio.to_thread(
             verify_protected_manifest, self.settings.protected_manifest_file
         )
-        ollama, chromadb, integrity = await asyncio.gather(
-            ollama_task, chroma_task, integrity_task
+        store_task = (
+            asyncio.to_thread(self.store.health)
+            if self.store is not None
+            else asyncio.sleep(0, {"status": "ok", "kind": "none"})
+        )
+        ollama, chromadb, integrity, store = await asyncio.gather(
+            ollama_task, chroma_task, integrity_task, store_task
         )
         worker = self.worker.status()
 
@@ -105,8 +112,9 @@ class HealthService:
         chroma_ok = chromadb.get("status") == "ok"
         worker_ok = bool(worker.get("alive")) or not self.settings.start_worker
         integrity_ok = bool(integrity.get("ok"))
+        store_ok = store.get("status") == "ok"
 
-        if ollama_ok and chroma_ok and worker_ok and integrity_ok:
+        if ollama_ok and chroma_ok and worker_ok and integrity_ok and store_ok:
             status = "ok"
         elif chromadb.get("connected") or ollama.get("connected") or worker.get("alive"):
             status = "degraded"
@@ -121,6 +129,7 @@ class HealthService:
             timestamp=utc_now(),
             components={
                 llm_name: ollama,
+                "store": store,
                 "chromadb": chromadb,
                 "grounding": {
                     "status": "ok" if self.settings.strict_grounding else "degraded",
