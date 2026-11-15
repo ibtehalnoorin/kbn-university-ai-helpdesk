@@ -56,7 +56,7 @@ def test_health_skips_ollama_when_provider_is_groq(groq_app):
     assert "ollama" not in body["components"]
     assert body["components"]["llm"]["provider"] == "groq"
     assert body["components"]["llm"]["status"] == "ok"
-    assert body["configuration"]["llm_model"] == "llama-3.1-8b-instant"
+    assert body["configuration"]["llm_model"] == "qwen/qwen3.8-27b"
 
 
 def test_health_degraded_when_groq_key_missing(groq_app):

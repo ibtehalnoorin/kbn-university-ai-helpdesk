@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     # Groq OpenAI-compatible API (free tier) and is what production uses.
     llm_provider: Literal["ollama", "groq"] = "ollama"
     groq_api_key: str = ""
-    groq_model: str = "llama-3.1-8b-instant"
+    groq_model: str = "qwen/qwen3.8-27b"
     groq_base_url: str = "https://api.groq.com/openai/v1"
     groq_timeout_seconds: float = 30.0
     groq_max_parallel: int = 8

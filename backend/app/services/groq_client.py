@@ -9,6 +9,7 @@ nothing depends on a local Ollama process.
 from __future__ import annotations
 
 import logging
+import re
 import threading
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
@@ -187,10 +188,19 @@ class GroqWorkerClient:
             raise WorkerResultError("The language model returned an unexpected response.") from exc
         if not content or not str(content).strip():
             raise WorkerResultError("The language model returned an empty answer.")
-        answer = str(content).strip()
+        answer = _normalise_spaces(str(content)).strip()
         if finish == "length":
             answer = _cut_to_last_sentence(answer)
         return answer
+
+
+_ODD_SPACES = re.compile("[\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]")
+_ZERO_WIDTH = re.compile("[\u200b\u200c\u200d\u2060\ufeff]")
+
+
+def _normalise_spaces(text: str) -> str:
+    """Models sometimes emit typographic spaces; plain spaces keep verification exact."""
+    return _ZERO_WIDTH.sub("", _ODD_SPACES.sub(" ", text))
 
 
 class _PayloadTooLarge(Exception):

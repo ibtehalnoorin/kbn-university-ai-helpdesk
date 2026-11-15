@@ -214,3 +214,40 @@ def test_production_without_a_database_logs_a_warning(make_client, caplog):
         with make_client(environment="production", database_url=""):
             pass
     assert any("KBN_DATABASE_URL" in record.message for record in caplog.records)
+
+
+# ---- found with a real Groq key: model output quirks ------------------------------
+def test_exotic_unicode_spaces_in_answers_are_normalised():
+    # gpt-oss models emit U+202F (narrow no-break space) inside names and emails,
+    # which would defeat the exact-text verification against the retrieved records.
+    text = "Prof. Ali Raza Moosvi, email​ vc@kbn.university"
+    client = _groq(lambda r: _reply(text))
+    assert _ask(client)["answer"] == "Prof. Ali Raza Moosvi, email vc@kbn.university"
+
+
+def test_default_groq_model_is_one_that_free_accounts_can_use():
+    assert Settings(start_worker=False).groq_model == "qwen/qwen3.8-27b"
+
+
+# ---- found with a real Groq key: "Verified" badge on an answer that uses no records ----
+def test_answer_that_uses_no_record_terms_is_not_verified(make_client):
+    # "What is 2 + 2?" is <= 6 words, so after a university question it is treated as a
+    # follow-up and takes the grounded path. "4" contains nothing the records can support.
+    with make_client(trusted_proxy_hops=0) as client:
+        sid = client.post("/sessions", json={}, headers=CLIENT).json()["id"]
+        first = client.post("/chat", json={"session_id": sid, "message": "Who is the Vice Chancellor of KBN University?"}, headers=CLIENT).json()
+        assert first["verification"]["status"] == "verified_kb" and first["sources"]  # real answers keep the badge
+        client.app.state.worker.answer = "4"
+        second = client.post("/chat", json={"session_id": sid, "message": "What is 2 + 2?"}, headers=CLIENT).json()
+    assert second["verification"]["status"] == "general_unverified"
+    assert second["sources"] == [] and second["grounded"] is False
+    assert second["assistant_message"]["content"] == "4"
+
+
+def test_answer_uses_records_detects_overlap_with_the_context():
+    from app.services.grounding import answer_uses_records
+    from tests.fakes import VC_CONTEXT
+
+    assert answer_uses_records("The Vice Chancellor is Prof. Ali Raza Moosvi.", VC_CONTEXT, "who leads kbn")
+    assert not answer_uses_records("4", VC_CONTEXT, "What is 2 + 2?")
+    assert not answer_uses_records("The capital of France is Paris.", VC_CONTEXT, "What is the capital of France?")

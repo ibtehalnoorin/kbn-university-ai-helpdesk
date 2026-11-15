@@ -450,6 +450,18 @@ def assess_retrieval(
     return GroundingDecision(True, "Retrieved context covers the requested information.")
 
 
+def answer_uses_records(answer: str, context: str, query: str) -> bool:
+    """True when the answer contains at least one topic term from the records.
+
+    Terms the user already typed do not count, so echoing the question is not evidence.
+    An answer with no such term (for example just "4") is not supported by the records
+    and must not carry the "Verified" label, even though it contains nothing that
+    could be checked as a name, email, phone number or year.
+    """
+    terms = _topic_terms(answer) - _topic_terms(query)
+    return any(term_present(term, context) for term in terms)
+
+
 def is_refusal(answer: str) -> bool:
     lowered = answer.lower()
     return any(phrase in lowered for phrase in _REFUSAL_PHRASES)

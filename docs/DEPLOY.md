@@ -52,7 +52,7 @@ them before launch.
 | --- | --- |
 | Rotate the Groq key | Create a new key in Groq, update `KBN_GROQ_API_KEY` in Render, delete the old key |
 | Emergency: stop using the AI | Set `KBN_DAILY_LLM_BUDGET=0`. Fast-path answers and the fixed "not in the records" reply still work |
-| Switch model | Set `KBN_GROQ_MODEL` (default `llama-3.1-8b-instant`; larger models answer better but use the free quota faster) |
+| Switch model | Set `KBN_GROQ_MODEL` (default `qwen/qwen3.8-27b`; which models you can use depends on your Groq account, list them with `curl -H "Authorization: Bearer $KBN_GROQ_API_KEY" https://api.groq.com/openai/v1/models`) |
 | Update knowledge | Edit `knowledge_docs/`, run `python backend/scripts/reindex.py`, commit `local_vector_kb/` and redeploy |
 | Check health | `GET /health` (config-only for Groq, so it never spends quota) |
 

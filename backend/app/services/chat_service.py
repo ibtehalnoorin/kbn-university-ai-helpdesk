@@ -30,6 +30,7 @@ from app.schemas import (
 from app.services.fast_answers import try_fast_answer
 from app.services.grounding import (
     FALLBACK_MESSAGE,
+    answer_uses_records,
     assess_retrieval,
     build_retrieval_query,
     grounding_policy,
@@ -551,6 +552,15 @@ class ChatService:
                 )
                 answer = FALLBACK_MESSAGE
                 verification = _verification("unavailable", reason)
+                final_sources = []
+                grounded = False
+            elif not answer_uses_records(answer, context, user_content):
+                # Passed the fact checks only because it makes no checkable claims
+                # (e.g. an off-topic follow-up). Do not present it as record-backed.
+                verification = _verification(
+                    "general_unverified",
+                    "The answer does not rely on the university records.",
+                )
                 final_sources = []
                 grounded = False
             else:
