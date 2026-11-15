@@ -41,6 +41,13 @@ CREATE TABLE IF NOT EXISTS counters (
     PRIMARY KEY (key, bucket)
 );
 CREATE INDEX IF NOT EXISTS counters_expires_idx ON counters (expires_at);
+CREATE TABLE IF NOT EXISTS enquiries (
+    id text PRIMARY KEY,
+    created_at timestamptz NOT NULL,
+    status text NOT NULL,
+    data jsonb NOT NULL
+);
+CREATE INDEX IF NOT EXISTS enquiries_created_idx ON enquiries (created_at);
 """
 
 
@@ -319,6 +326,43 @@ class PostgresSessionStore:
             result = {(k, b): n for k, b, n in cur.fetchall()}
         return [result[(k, b)] for k, b in zip(keys, buckets)]
 
+    # ------------------------------------------------------------------ enquiries
+    @_retry_if_connection_went_stale
+    def create_enquiry(self, name: str, contact: str, topic: str, message: str, session_id: str | None = None) -> dict:
+        now = _now()
+        row = {
+            "id": f"enq_{uuid.uuid4().hex[:12]}",
+            "created_at": now.isoformat(),
+            "status": "new",
+            "name": name,
+            "contact": contact,
+            "topic": topic,
+            "message": message,
+            "session_id": session_id,
+        }
+        with self._tx() as cur:
+            cur.execute(
+                "INSERT INTO enquiries (id, created_at, status, data) VALUES (%s, %s, %s, %s)",
+                (row["id"], now, row["status"], Jsonb(row)),
+            )
+        return row
+
+    @_retry_if_connection_went_stale
+    def list_enquiries(self, status: str | None = None, limit: int = 200) -> list[dict]:
+        with self._tx() as cur:
+            cur.execute(
+                "SELECT data FROM enquiries WHERE (%s::text IS NULL OR status = %s) "
+                "ORDER BY created_at DESC LIMIT %s",
+                (status, status, limit),
+            )
+            return [r[0] for r in cur.fetchall()]
+
+    @_retry_if_connection_went_stale
+    def purge_enquiries_older_than(self, days: int) -> int:
+        with self._tx() as cur:
+            cur.execute("DELETE FROM enquiries WHERE created_at < %s", (_now() - timedelta(days=days),))
+            return cur.rowcount
+
     @_retry_if_connection_went_stale
     def purge_counters(self) -> int:
         with self._tx() as cur:
@@ -337,7 +381,7 @@ class PostgresSessionStore:
     # ------------------------------------------------------------------ test hooks
     def truncate_for_tests(self) -> None:
         with self._tx() as cur:
-            cur.execute("TRUNCATE sessions, counters")
+            cur.execute("TRUNCATE sessions, counters, enquiries")
 
     def set_updated_at_for_tests(self, session_id: str, when: datetime) -> None:
         with self._tx() as cur:

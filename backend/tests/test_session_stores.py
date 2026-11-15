@@ -174,3 +174,17 @@ def test_prepared_statements_are_disabled_for_pgbouncer_poolers():
             assert conn.prepare_threshold is None
     finally:
         store.close()
+
+
+def test_enquiries_round_trip_and_purge_in_both_stores(make_store):
+    store = make_store()
+    first = store.create_enquiry("Asha", "asha@example.com", "admissions", "When do classes start?")
+    second = store.create_enquiry("Bilal", "9845012345", "fees", "Is there an installment plan?", session_id="s1")
+    rows = store.list_enquiries()
+    assert [r["name"] for r in rows] == ["Bilal", "Asha"]  # newest first
+    assert rows[0]["session_id"] == "s1" and rows[1]["status"] == "new" and rows[1]["id"] == first["id"]
+    assert [r["id"] for r in store.list_enquiries(status="new", limit=1)] == [second["id"]]
+    assert store.list_enquiries(status="done") == []
+    assert store.purge_enquiries_older_than(30) == 0  # nothing is that old yet
+    assert store.purge_enquiries_older_than(-1) == 2  # a cutoff in the future removes everything
+    assert store.list_enquiries() == []

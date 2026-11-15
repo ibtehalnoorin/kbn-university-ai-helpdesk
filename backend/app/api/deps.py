@@ -54,5 +54,9 @@ def limit_chat(request: Request) -> None:
     _limit(request, "chat_limiter", "questions")
 
 
+def limit_enquiries(request: Request) -> None:
+    _limit(request, "enquiry_limiter", "enquiries")
+
+
 def limit_new_sessions(request: Request) -> None:
     _limit(request, "session_limiter", "new conversations")

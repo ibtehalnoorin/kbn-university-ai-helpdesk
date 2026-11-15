@@ -127,6 +127,12 @@ class Settings(BaseSettings):
     database_url: str = ""
     session_retention_days: int = 30
     database_connect_timeout_seconds: float = 5.0
+    # "Talk to the admissions office": enquiries are stored, optionally forwarded to a webhook
+    # (an email service, Google Sheet, Slack...), and read by staff with the admin token.
+    admin_token: str = ""  # empty = the staff view is disabled
+    enquiry_webhook_url: str = ""
+    rate_limit_enquiries_per_hour: int = 5
+    enquiry_retention_days: int = 180
     # Vercel Cron authenticates with `Authorization: Bearer $CRON_SECRET`. Empty = cron disabled.
     cron_secret: str = Field(default="", validation_alias=AliasChoices("KBN_CRON_SECRET", "CRON_SECRET"))
     protected_manifest_path: str = "protected_files.sha256"
