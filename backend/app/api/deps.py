@@ -32,13 +32,23 @@ def require_owner(request: Request, session_id: str) -> None:
 
 
 def _limit(request: Request, limiter_name: str, what: str) -> None:
-    limiter = getattr(request.app.state, limiter_name)
-    key = _client_ip(request, request.app.state.settings.trusted_proxy_hops)
-    if not limiter.allow(key):
-        raise RateLimitedError(
-            f"Too many {what}. Please wait a moment and try again.",
-            retry_after=limiter.retry_after(key),
-        )
+    """Per-visitor limit (anonymous id) plus a higher per-address ceiling.
+
+    The visitor limit keeps people on a shared campus address from throttling each
+    other; the ceiling stops one address from rotating ids to dodge the limit.
+    """
+    state = request.app.state
+    ip = _client_ip(request, state.settings.trusted_proxy_hops)
+    visitor = client_id(request) or ip
+    for limiter, key in (
+        (getattr(state, limiter_name + "_ip"), ip),
+        (getattr(state, limiter_name), visitor),
+    ):
+        if not limiter.allow(key):
+            raise RateLimitedError(
+                f"Too many {what}. Please wait a moment and try again.",
+                retry_after=limiter.retry_after(key),
+            )
 
 
 def limit_chat(request: Request) -> None:

@@ -98,9 +98,17 @@ class Settings(BaseSettings):
     # Groq's free tier allows roughly 1K requests/day; stay under it. 0 = LLM off
     # (fast-path and fixed fallback answers still work).
     daily_llm_budget: int = 900
+    # One client address may use at most this many LLM answers per day, so one person
+    # (or script) cannot use up everyone's share.
+    per_ip_daily_llm_calls: int = 100
+    # Per-IP ceiling = per-visitor limit x this, so a campus sharing one address is fine
+    # but rotating anonymous ids cannot bypass the limit.
+    rate_limit_ip_multiplier: int = 10
     # Number of reverse proxies (Render, Cloudflare...) that append to X-Forwarded-For.
     trusted_proxy_hops: int = 1
-    max_sessions: int = 100
+    # Global safety valve only (retention and rate limits bound growth); a low cap would
+    # lock every new visitor out once enough people had visited.
+    max_sessions: int = 100_000
     max_messages_per_session: int = 500
 
     enable_web_fallback: bool = False

@@ -88,10 +88,12 @@ def test_session_creation_is_limited_per_hour(make_client):
 
 
 def test_different_visitors_are_limited_independently(make_client):
+    a = {"X-Client-Id": "visitor-a-0123456789", "X-Forwarded-For": "1.1.1.1"}
+    b = {"X-Client-Id": "visitor-b-0123456789", "X-Forwarded-For": "2.2.2.2"}
     with make_client(rate_limit_sessions_per_hour=1, trusted_proxy_hops=1) as client:
-        one = client.post("/sessions", json={}, headers={**CLIENT, "X-Forwarded-For": "1.1.1.1"})
-        two = client.post("/sessions", json={}, headers={**CLIENT, "X-Forwarded-For": "2.2.2.2"})
-        again = client.post("/sessions", json={}, headers={**CLIENT, "X-Forwarded-For": "1.1.1.1"})
+        one = client.post("/sessions", json={}, headers=a)
+        two = client.post("/sessions", json={}, headers=b)
+        again = client.post("/sessions", json={}, headers=a)
     assert (one.status_code, two.status_code, again.status_code) == (201, 201, 429)
 
 

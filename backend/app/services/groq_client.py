@@ -22,7 +22,7 @@ from app.errors import (
     WorkerUnavailableError,
 )
 from app.services.worker_client import WorkerClient
-from processor import MAX_CONTEXT_TOKENS, estimate_tokens, truncate_history
+from processor import MAX_CONTEXT_TOKENS, estimate_tokens
 
 logger = logging.getLogger("kbn.groq")
 
@@ -116,19 +116,30 @@ class GroqWorkerClient:
             )
             with self._lock:
                 history = list(self._histories.get(worker_key, []))
-            if history and history[0]["role"] == "system":
-                history[0] = {"role": "system", "content": system_prompt}
-            else:
-                history.insert(0, {"role": "system", "content": system_prompt})
-            history = truncate_history(history, MAX_CONTEXT_TOKENS)
-            messages = history + [{"role": "user", "content": user_prompt}]
+            messages = (
+                [{"role": "system", "content": system_prompt}]
+                + history
+                + [{"role": "user", "content": user_prompt}]
+            )
 
-            answer = self._complete(messages)
+            try:
+                answer = self._complete(messages)
+            except _PayloadTooLarge:
+                with self._lock:
+                    self._histories.pop(worker_key, None)
+                raise WorkerResultError(
+                    "That conversation got too long for the assistant. Please start a new conversation."
+                ) from None
 
-            history = messages + [{"role": "assistant", "content": answer}]
+            # Keep only the bare question and answer. Replaying every earlier retrieved
+            # context block would burn the free tier's tokens-per-minute budget.
+            history = _trim_history(history + [
+                {"role": "user", "content": query},
+                {"role": "assistant", "content": answer},
+            ])
             with self._lock:
                 self._histories[worker_key] = history
-            tokens = estimate_tokens(history)
+            tokens = estimate_tokens(messages) + estimate_tokens([{"content": answer}])
             return {
                 "status": "success",
                 "session_id": worker_key,
@@ -163,13 +174,46 @@ class GroqWorkerClient:
         if response.status_code == 429:
             logger.warning("Groq rate limit hit")
             raise WorkerQueueFullError(BUSY_MESSAGE)
+        if response.status_code == 413:
+            raise _PayloadTooLarge()
         if response.status_code >= 400:
             logger.error("Groq error %s: %s", response.status_code, response.text[:300])
             raise WorkerResultError(f"The language model returned an error ({response.status_code}).")
         try:
-            content = response.json()["choices"][0]["message"]["content"]
+            choice = response.json()["choices"][0]
+            content = choice["message"]["content"]
+            finish = choice.get("finish_reason")
         except (KeyError, IndexError, TypeError, ValueError) as exc:
             raise WorkerResultError("The language model returned an unexpected response.") from exc
         if not content or not str(content).strip():
             raise WorkerResultError("The language model returned an empty answer.")
-        return str(content).strip()
+        answer = str(content).strip()
+        if finish == "length":
+            answer = _cut_to_last_sentence(answer)
+        return answer
+
+
+class _PayloadTooLarge(Exception):
+    """Groq answered 413: the request exceeded the model's token limits."""
+
+
+HISTORY_TOKEN_CAP = 1500
+
+
+def _trim_history(history: list[dict]) -> list[dict]:
+    """Drop the oldest question/answer pairs until the history fits the token cap."""
+    while len(history) > 2 and estimate_tokens(history) > HISTORY_TOKEN_CAP:
+        history = history[2:]
+    return history
+
+
+def _cut_to_last_sentence(text: str) -> str:
+    """The model hit max_tokens: keep only complete sentences, or fail if there are none."""
+    end = max(text.rfind(mark) for mark in (". ", "! ", "? ", ".\n", "!\n", "?\n"))
+    if end < 0 and text[-1:] in ".!?":
+        return text
+    if end < 40:
+        raise WorkerResultError(
+            "The assistant could not finish that answer. Please ask a more specific question."
+        )
+    return text[: end + 1].strip()

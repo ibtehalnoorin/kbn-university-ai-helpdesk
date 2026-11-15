@@ -41,6 +41,7 @@ from app.services.grounding import (
 )
 from app.services.retrieval import RetrievalResult, RetrievalService
 from app.services.session_store import SessionStore, new_message_id
+from app.services.rate_limit import current_client_key
 from app.services.worker_client import WorkerClient
 
 logger = logging.getLogger("kbn.chat")
@@ -119,12 +120,18 @@ class ChatService:
 
     def _submit(self, **kwargs):
         """Submit to the LLM, spending one unit of the daily budget (fast paths never get here)."""
-        if self.budget is not None and not self.budget.try_consume():
+        key = current_client_key.get()
+        if self.budget is not None and not self.budget.try_consume(key=key):
             raise DailyLimitError(
                 "The assistant has reached its daily limit. Please try again tomorrow, "
                 "or contact the university office directly."
             )
-        return self.worker.submit(**kwargs)
+        try:
+            return self.worker.submit(**kwargs)
+        except Exception:
+            if self.budget is not None:
+                self.budget.refund(key=key)  # nothing was sent to the model
+            raise
 
     def is_busy(self, session_id: str) -> bool:
         lock = self._locks.get(session_id)

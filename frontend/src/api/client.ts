@@ -121,6 +121,10 @@ export function isTimeout(error: unknown): boolean {
   return error instanceof ApiError && (error.status === 504 || error.code === "llm_timeout");
 }
 
+export function isNotFound(error: unknown): boolean {
+  return error instanceof ApiError && (error.status === 404 || error.code === "not_found");
+}
+
 export function isBusy(error: unknown): boolean {
   return error instanceof ApiError && (error.status === 409 || error.code === "session_busy");
 }

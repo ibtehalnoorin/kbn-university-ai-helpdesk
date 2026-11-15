@@ -64,6 +64,11 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
         await asyncio.to_thread(retrieval.initialize)
 
         store = make_store(settings)
+        if settings.environment == "production" and not settings.database_url:
+            logger.warning(
+                "KBN_DATABASE_URL is not set: conversations are kept on local disk and are "
+                "lost whenever this instance restarts or sleeps. Set a Postgres URL."
+            )
         await _purge_once(store, settings.session_retention_days)
         purge_task = asyncio.create_task(_retention_loop(store, settings.session_retention_days))
         worker = make_worker(settings, ollama_cls=WorkerClient)
@@ -76,11 +81,18 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
                 logger.exception("Could not start the LLM worker at startup")
 
         chat_service = ChatService(
-            settings, store, retrieval, worker, budget=DailyBudget(settings.daily_llm_budget)
+            settings,
+            store,
+            retrieval,
+            worker,
+            budget=DailyBudget(settings.daily_llm_budget, per_key_max=settings.per_ip_daily_llm_calls),
         )
+        mult = settings.rate_limit_ip_multiplier
         app.state.chat_limiter = SlidingWindowLimiter(settings.rate_limit_per_minute, 60)
-        app.state.session_limiter = SlidingWindowLimiter(
-            settings.rate_limit_sessions_per_hour, 3600
+        app.state.chat_limiter_ip = SlidingWindowLimiter(settings.rate_limit_per_minute * mult, 60)
+        app.state.session_limiter = SlidingWindowLimiter(settings.rate_limit_sessions_per_hour, 3600)
+        app.state.session_limiter_ip = SlidingWindowLimiter(
+            settings.rate_limit_sessions_per_hour * mult, 3600
         )
         health_service = HealthService(settings, retrieval, worker, store)
 

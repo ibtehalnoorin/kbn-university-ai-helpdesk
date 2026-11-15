@@ -10,10 +10,13 @@ them before launch.
    Free-tier limits (checked Nov 2026): roughly 30 requests/min, 1K requests/day and
    8K tokens/min on the models listed in
    <https://console.groq.com/docs/rate-limits>. The app stays under the daily limit
-   with `KBN_DAILY_LLM_BUDGET` (default 900) and shows a polite message when it is hit.
-2. **Neon database**: create a free project at <https://neon.tech>, copy the
-   connection string (`postgresql://...?sslmode=require`). No setup needed; the app
-   creates its own table.
+   with `KBN_DAILY_LLM_BUDGET` (default 900 per day, per running instance) and each client
+   address may use at most `KBN_PER_IP_DAILY_LLM_CALLS` (default 100) answers a day. A
+   polite message is shown when either is hit.
+2. **Neon database** (required for a real launch): create a free project at
+   <https://neon.tech>, copy the connection string (`postgresql://...?sslmode=require`).
+   No setup needed; the app creates its own table. Without it, chats live on Render's
+   ephemeral disk and vanish on every restart or sleep (the app logs a warning).
 3. **Render account** connected to the GitHub repo.
 
 ## Deploy
