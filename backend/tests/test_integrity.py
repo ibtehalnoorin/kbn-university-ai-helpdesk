@@ -53,3 +53,14 @@ def test_manifest_detects_a_changed_file(tmp_path) -> None:
     result = verify_protected_manifest(manifest)
     assert result["ok"] is False
     assert result["files"][0]["ok"] is False
+
+
+def test_hash_ignores_line_endings(tmp_path, monkeypatch) -> None:
+    import app.services.integrity as integrity
+
+    monkeypatch.setattr(integrity, "PROJECT_ROOT", tmp_path)
+    (tmp_path / "sample.py").write_bytes(b"a = 1\r\nb = 2\r\n")  # Windows checkout
+    lf_hash = hashlib.sha256(b"a = 1\nb = 2\n").hexdigest()
+    manifest = tmp_path / "m.sha256"
+    manifest.write_text(f"{lf_hash}  sample.py\n", encoding="utf-8")
+    assert integrity.verify_protected_manifest(manifest)["ok"] is True

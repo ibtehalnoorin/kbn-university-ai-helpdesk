@@ -9,11 +9,9 @@ from app.config import PROJECT_ROOT
 
 
 def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    """Hash file content with CRLF normalised to LF so Windows, macOS, Linux and
+    Docker checkouts of the same commit produce the same digest."""
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def verify_protected_manifest(manifest_path: Path) -> dict:
