@@ -61,13 +61,17 @@ def prepare_runtime(
     copied = _copy_once(project_root / "local_vector_kb", store)
     env["KBN_CHROMA_DIR"] = str(store)
 
-    model_cache = scratch / "fastembed_cache"
     bundled = project_root / ".fastembed_cache"
     if bundled.exists():
-        _copy_once(bundled, model_cache)
+        # The model is only read, so use it in place. (Its Hugging Face-style cache is
+        # symlinks to one blob; copying followed them and tripled the size in /tmp.)
+        env["FASTEMBED_CACHE_PATH"] = str(bundled)
+        env["HF_HUB_OFFLINE"] = "1"  # never try to download or write lock files
+        model_cache = bundled
     else:
+        model_cache = scratch / "fastembed_cache"
         model_cache.mkdir(parents=True, exist_ok=True)  # model is downloaded on first use
-    env["FASTEMBED_CACHE_PATH"] = str(model_cache)
+        env["FASTEMBED_CACHE_PATH"] = str(model_cache)
     # vercel.json gives the function 60 s; answer or fail before the platform kills it.
     env.setdefault("KBN_REQUEST_TIMEOUT_SECONDS", "50")
     return {"read_only": True, "copied": copied, "store": str(store), "model_cache": str(model_cache)}

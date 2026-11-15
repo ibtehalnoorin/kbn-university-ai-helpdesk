@@ -56,6 +56,8 @@ def test_daily_budget_has_a_per_key_cap_and_refunds():
 
 
 def test_failed_submit_refunds_the_budget():
+    import asyncio
+
     class Stub:
         calls = 0
 
@@ -67,8 +69,8 @@ def test_failed_submit_refunds_the_budget():
 
     service = ChatService(Settings(start_worker=False), None, None, Stub(), budget=DailyBudget(1))
     with pytest.raises(WorkerQueueFullError):
-        service._submit(query="q")
-    assert service._submit(query="q") == "future"  # the failed attempt did not cost a unit
+        asyncio.run(service._submit(query="q"))
+    assert asyncio.run(service._submit(query="q")) == "future"  # the failed attempt did not cost a unit
 
 
 def test_one_client_address_cannot_drain_the_daily_budget(make_client):
@@ -251,3 +253,35 @@ def test_answer_uses_records_detects_overlap_with_the_context():
     assert answer_uses_records("The Vice Chancellor is Prof. Ali Raza Moosvi.", VC_CONTEXT, "who leads kbn")
     assert not answer_uses_records("4", VC_CONTEXT, "What is 2 + 2?")
     assert not answer_uses_records("The capital of France is Paris.", VC_CONTEXT, "What is the capital of France?")
+
+
+# ---- Vercel review: budget database calls must not block the event loop -------------
+def test_budget_calls_do_not_block_the_event_loop():
+    import asyncio
+    import time
+
+    class SlowBudget:
+        def try_consume(self, now=None, key=None):
+            time.sleep(0.4)  # e.g. Neon waking from suspend
+            return True
+
+        def refund(self, key=None, now=None):
+            pass
+
+    class Stub:
+        def submit(self, **kwargs):
+            return "future"
+
+    service = ChatService(Settings(start_worker=False), None, None, Stub(), budget=SlowBudget())
+    ticks = []
+
+    async def ticker():
+        for _ in range(8):
+            await asyncio.sleep(0.05)
+            ticks.append(time.perf_counter())
+
+    async def run():
+        await asyncio.gather(service._submit(query="q"), ticker())
+
+    asyncio.run(run())
+    assert len(ticks) == 8 and ticks[-1] - ticks[0] < 0.6  # the loop kept ticking during the 0.4 s call

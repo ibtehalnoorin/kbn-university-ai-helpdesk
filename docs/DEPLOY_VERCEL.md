@@ -24,7 +24,7 @@ so limits kept in each copy's memory would not add up. They live in the database
 | --- | --- | --- |
 | Groq API key (create a **new** one) | <https://console.groq.com> | `KBN_GROQ_API_KEY` |
 | Neon connection string | <https://neon.tech> (or Vercel Marketplace → Neon). Use the **pooled** string (host contains `-pooler`) and keep `?sslmode=require` | `KBN_DATABASE_URL` |
-| A random string you invent (32+ characters) | for example `openssl rand -hex 24` | `CRON_SECRET` |
+| A random string you invent (32+ characters) | for example `openssl rand -hex 24` | `CRON_SECRET` (exactly this name: it is the only one Vercel Cron sends) |
 
 ## 2. Import the project
 
@@ -70,8 +70,8 @@ set them temporarily in Vercel and redeploy, then remove them).
   Vercel's current terms.
 - **Function time.** `vercel.json` gives the function 60 seconds; the app aborts a slow AI
   call after 50 seconds by default (`KBN_REQUEST_TIMEOUT_SECONDS`).
-- **Cron.** The daily cleanup only runs if `CRON_SECRET` is set. Without it, old chats are
-  still purged each time a new function instance starts.
+- **Cron.** The daily cleanup endpoint only works if `CRON_SECRET` is set. Without it, old chats
+  and expired limit counters are still purged each time a new function instance starts.
 - **Privacy.** Questions are sent to Groq. The UI tells visitors not to share personal details.
   Chats are deleted after 30 days (`KBN_SESSION_RETENTION_DAYS`) and each visitor sees only
   their own.

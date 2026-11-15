@@ -58,12 +58,42 @@ def test_prepare_runtime_copies_the_index_to_a_writable_dir_once(tmp_path):
     assert second["copied"] is False and (store / "chroma.sqlite3").read_text() == "changed-at-runtime"
 
 
-def test_prepare_runtime_points_fastembed_at_the_bundled_model_cache(tmp_path):
+def test_prepare_runtime_reads_the_bundled_model_in_place_instead_of_copying_it(tmp_path):
+    # The Hugging Face cache is symlinks to one blob; copying followed them and wrote the
+    # 64 MB model to /tmp three times (192 MB per cold start). The model is only read.
     from app.runtime import prepare_runtime
 
     project, env = _fake_project(tmp_path), {}
     prepare_runtime(project, env, read_only=True, scratch_dir=tmp_path / "tmp")
+    assert Path(env["FASTEMBED_CACHE_PATH"]) == project / ".fastembed_cache"
+    assert env["HF_HUB_OFFLINE"] == "1"
+    assert not (tmp_path / "tmp" / "kbn" / "fastembed_cache").exists()
+
+
+def test_prepare_runtime_without_a_bundled_model_downloads_to_tmp(tmp_path):
+    from app.runtime import prepare_runtime
+
+    project, env = _fake_project(tmp_path), {}
+    (project / ".fastembed_cache").rmdir()
+    prepare_runtime(project, env, read_only=True, scratch_dir=tmp_path / "tmp")
     assert Path(env["FASTEMBED_CACHE_PATH"]) == tmp_path / "tmp" / "kbn" / "fastembed_cache"
+    assert "HF_HUB_OFFLINE" not in env
+
+
+@pytest.mark.skipif(not (ROOT / ".fastembed_cache").exists(), reason="model not bundled (run vercel_build.py)")
+def test_embedding_works_from_a_read_only_bundled_model(tmp_path):
+    import shutil
+
+    bundle = tmp_path / "bundle"
+    shutil.copytree(ROOT / ".fastembed_cache", bundle, symlinks=True)
+    subprocess.run(["chmod", "-R", "a-w", str(bundle)], check=True)
+    code = "import embeddings; print(len(embeddings.embed('hello')))"
+    env = {**os.environ, "FASTEMBED_CACHE_PATH": str(bundle), "HF_HUB_OFFLINE": "1", "KBN_EMBEDDING_PROVIDER": "onnx"}
+    try:
+        out = subprocess.run([sys.executable, "-c", code], cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
+    finally:
+        subprocess.run(["chmod", "-R", "u+w", str(bundle)], check=True)
+    assert out.returncode == 0 and out.stdout.strip().splitlines()[-1] == "384", out.stderr[-600:]
 
 
 def test_prepare_runtime_does_nothing_on_a_writable_host(tmp_path):

@@ -119,10 +119,13 @@ class ChatService:
         # Exact standalone questions only; follow-ups depend on session history.
         self._answer_cache: dict[str, tuple[float, dict]] = {}
 
-    def _submit(self, **kwargs):
-        """Submit to the LLM, spending one unit of the daily budget (fast paths never get here)."""
+    async def _submit(self, **kwargs):
+        """Submit to the LLM, spending one unit of the daily budget (fast paths never get here).
+
+        Budget calls may hit Postgres, so they run in a thread to keep the event loop free.
+        """
         key = current_client_key.get()
-        if self.budget is not None and not self.budget.try_consume(key=key):
+        if self.budget is not None and not await asyncio.to_thread(self.budget.try_consume, None, key):
             raise DailyLimitError(
                 "The assistant has reached its daily limit. Please try again tomorrow, "
                 "or contact the university office directly."
@@ -131,7 +134,7 @@ class ChatService:
             return self.worker.submit(**kwargs)
         except Exception:
             if self.budget is not None:
-                self.budget.refund(key=key)  # nothing was sent to the model
+                await asyncio.to_thread(self.budget.refund, key)  # nothing was sent to the model
             raise
 
     def is_busy(self, session_id: str) -> bool:
@@ -277,7 +280,7 @@ class ChatService:
         persona, base_prompt = classify_intent(message)
         system_prompt = f"{base_prompt}\n\n{grounding_policy()}"
         worker_key = self.store.worker_key_for(session_id)
-        future = self._submit(
+        future = await self._submit(
             worker_key=worker_key,
             query=message,
             kb_knowledge=result.context,
@@ -334,7 +337,7 @@ class ChatService:
         persona, base_prompt = classify_intent(request.message)
         system_prompt = f"{base_prompt}\n\n{general_policy()}"
         worker_key = self.store.worker_key_for(request.session_id)
-        future = self._submit(
+        future = await self._submit(
             worker_key=worker_key,
             query=request.message,
             kb_knowledge="",
@@ -663,7 +666,7 @@ class ChatService:
             "not answer the question, say so.\n"
         )
         worker_key = self.store.worker_key_for(request.session_id)
-        future = self._submit(
+        future = await self._submit(
             worker_key=worker_key,
             query=request.message,
             kb_knowledge="",

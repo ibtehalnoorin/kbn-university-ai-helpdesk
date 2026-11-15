@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS counters (
     expires_at timestamptz NOT NULL,
     PRIMARY KEY (key, bucket)
 );
+CREATE INDEX IF NOT EXISTS counters_expires_idx ON counters (expires_at);
 """
 
 

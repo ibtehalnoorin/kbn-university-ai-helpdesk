@@ -44,6 +44,9 @@ async def _purge_once(store, days: int) -> None:
         removed = await asyncio.to_thread(store.purge_older_than, days)
         if removed:
             logger.info("Retention purge removed %s session(s) older than %s days", removed, days)
+        purge_counters = getattr(store, "purge_counters", None)
+        if purge_counters:  # does not depend on the Vercel cron being configured
+            await asyncio.to_thread(purge_counters)
     except Exception:
         logger.exception("Retention purge failed")
 
