@@ -108,3 +108,30 @@ def test_pyproject_dependencies_match_the_production_requirements():
     prod = (ROOT / "backend" / "requirements-prod.txt").read_text().splitlines()
     assert _requirement_names(declared) == _requirement_names(prod)
     assert tomllib.loads((ROOT / "pyproject.toml").read_text())["tool"]["vercel"]["entrypoint"] == "index:app"
+
+
+def test_the_tmp_copy_is_writable_even_when_the_bundle_is_read_only(tmp_path):
+    # Found by running the app against a locked-down bundle: copytree preserved the
+    # read-only modes, so ChromaDB could not write to its own copy.
+    from app.runtime import prepare_runtime
+
+    project, env = _fake_project(tmp_path), {}
+    subprocess.run(["chmod", "-R", "a-w", str(project)], check=True)
+    try:
+        prepare_runtime(project, env, read_only=True, scratch_dir=tmp_path / "tmp")
+        store = Path(env["KBN_CHROMA_DIR"])
+        assert os.access(store, os.W_OK) and os.access(store / "chroma.sqlite3", os.W_OK)
+        (store / "new.file").write_text("ok")  # directories are writable too
+    finally:
+        subprocess.run(["chmod", "-R", "u+w", str(project)], check=True)
+
+
+def test_vercel_defaults_fit_inside_the_function_time_limit(tmp_path):
+    from app.runtime import prepare_runtime
+
+    env: dict = {}
+    prepare_runtime(_fake_project(tmp_path), env, read_only=True, scratch_dir=tmp_path / "tmp")
+    assert int(env["KBN_REQUEST_TIMEOUT_SECONDS"]) < 60  # vercel.json gives the function 60 s
+    env = {"KBN_REQUEST_TIMEOUT_SECONDS": "25"}
+    prepare_runtime(_fake_project(tmp_path / "other"), env, read_only=True, scratch_dir=tmp_path / "tmp2")
+    assert env["KBN_REQUEST_TIMEOUT_SECONDS"] == "25"  # explicit settings win

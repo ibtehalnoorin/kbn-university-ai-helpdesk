@@ -21,6 +21,14 @@ def is_read_only(project_root: Path) -> bool:
     return not os.access(project_root, os.W_OK)
 
 
+def _make_writable(path: Path) -> None:
+    """A read-only bundle copies as read-only; the instance must be able to write to its copy."""
+    for current, directories, files in os.walk(path):
+        for name in [*directories, *files, ""]:
+            target = Path(current, name) if name else Path(current)
+            os.chmod(target, os.stat(target).st_mode | 0o200 | (0o100 if target.is_dir() else 0))
+
+
 def _copy_once(source: Path, target: Path) -> bool:
     """Copy ``source`` to ``target`` unless it already exists. Safe if two cold starts race."""
     if target.exists():
@@ -28,6 +36,7 @@ def _copy_once(source: Path, target: Path) -> bool:
     target.parent.mkdir(parents=True, exist_ok=True)
     staging = target.with_name(f"{target.name}.{uuid.uuid4().hex}.partial")
     shutil.copytree(source, staging)
+    _make_writable(staging)
     try:
         os.rename(staging, target)
     except OSError:  # another instance finished first
@@ -59,4 +68,6 @@ def prepare_runtime(
     else:
         model_cache.mkdir(parents=True, exist_ok=True)  # model is downloaded on first use
     env["FASTEMBED_CACHE_PATH"] = str(model_cache)
+    # vercel.json gives the function 60 s; answer or fail before the platform kills it.
+    env.setdefault("KBN_REQUEST_TIMEOUT_SECONDS", "50")
     return {"read_only": True, "copied": copied, "store": str(store), "model_cache": str(model_cache)}
