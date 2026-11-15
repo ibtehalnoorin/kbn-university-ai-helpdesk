@@ -64,7 +64,7 @@ class PostgresSessionStore:
             open=False,
             timeout=connect_timeout,
             check=ConnectionPool.check_connection,  # Neon drops idle connections
-            kwargs={"connect_timeout": max(1, int(connect_timeout))},
+            kwargs={"connect_timeout": max(1, int(connect_timeout)), "prepare_threshold": None},
         )
         self._pool.open(wait=False)
 
