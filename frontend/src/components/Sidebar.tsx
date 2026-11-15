@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  BookOpenText,
   Check,
   Loader2,
   MessageSquare,
@@ -91,17 +90,21 @@ export function Sidebar({
         aria-label="Conversations"
       >
         <div className="flex items-start gap-3 border-b border-sand-200 px-4 pb-4 pt-4">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-gold-300/70 bg-gradient-to-br from-kbn-800 to-kbn-950 text-gold-300 shadow-sm">
-            <BookOpenText className="h-5 w-5" aria-hidden="true" />
-          </span>
+          <img
+            src="/brand/kbn-mark.png"
+            alt="Khaja Bandanawaz University emblem"
+            width={44}
+            height={44}
+            className="h-11 w-11 shrink-0 object-contain"
+          />
           <div className="min-w-0 flex-1">
-            <p className="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-gold-600">
-              Khaja Bandanawaz
+            <p className="text-[0.56rem] font-bold uppercase tracking-[0.16em] text-gold-600">
+              Khaja Bandanawaz University
             </p>
-            <h1 className="font-display text-lg font-semibold leading-tight text-kbn-950">
-              University Helpdesk
+            <h1 className="font-display text-[1.02rem] font-semibold leading-tight text-kbn-600">
+              Admissions &amp; Student Helpdesk
             </h1>
-            <p className="mt-0.5 text-[0.65rem] text-stone-500">AI research assistant</p>
+            <p className="mt-0.5 text-[0.65rem] italic text-stone-500">Educating Humanity</p>
           </div>
           <button
             type="button"

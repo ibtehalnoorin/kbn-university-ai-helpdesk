@@ -61,7 +61,7 @@ export function HealthPill({
   return (
     <div className={`flex flex-col gap-1 text-[0.68rem] ${config.text}`} title={detail}>
       <span className="flex items-center gap-2 font-semibold">
-        <span className={`h-2 w-2 rounded-full ${config.dot} shadow-[0_0_0_3px_rgba(26,154,118,0.12)]`} />
+        <span className={`h-2 w-2 rounded-full ${config.dot} shadow-[0_0_0_3px_rgba(51,67,107,0.14)]`} />
         <config.Icon className="h-3.5 w-3.5" aria-hidden="true" />
         {config.label}
       </span>

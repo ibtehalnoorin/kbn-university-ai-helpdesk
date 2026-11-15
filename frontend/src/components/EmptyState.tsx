@@ -1,5 +1,4 @@
 import {
-  BookOpenText,
   Building2,
   GraduationCap,
   Mail,
@@ -7,6 +6,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import { QuickLinks } from "./QuickLinks";
 
 const suggestions = [
   {
@@ -52,22 +52,19 @@ export function EmptyState({
     <div className="relative flex flex-1 flex-col items-center justify-center px-4 py-10 text-center sm:py-16">
       <div className="hero-grid pointer-events-none absolute inset-0 opacity-60" aria-hidden="true" />
 
-      <div className="relative">
-        <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-gold-300/60 bg-gradient-to-br from-kbn-800 to-kbn-950 text-gold-300 shadow-lg shadow-kbn-950/20">
-          <BookOpenText className="h-8 w-8" aria-hidden="true" />
-        </span>
-        <span className="absolute -right-2 -top-2 rounded-full border border-gold-200 bg-gold-300 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-kbn-950">
-          Verified
-        </span>
-      </div>
+      <img
+        src="/brand/kbn-logo.png"
+        alt="Khaja Bandanawaz University: Educating Humanity"
+        className="relative mx-auto h-28 w-auto sm:h-32"
+      />
 
-      <h2 className="relative mt-6 max-w-xl font-display text-2xl font-semibold tracking-tight text-kbn-950 sm:text-3xl">
-        How can the KBN University Helpdesk assist you?
+      <h2 className="relative mt-6 max-w-xl font-display text-2xl font-semibold tracking-tight text-kbn-600 sm:text-3xl">
+        How can we help you today?
       </h2>
       <p className="relative mt-2 max-w-lg text-sm leading-relaxed text-stone-600">
-        Ask about people, faculties, courses, admissions, location and official
-        contacts. Answers come only from the university&apos;s indexed records —
-        if a fact is missing, the helpdesk will tell you.
+        Ask about admissions, programmes, faculties, people and official contacts.
+        Answers come from the university&apos;s published information; if a fact
+        isn&apos;t there, we&apos;ll say so and point you to the right office.
       </p>
 
       <div className="relative mt-7 grid w-full max-w-2xl grid-cols-1 gap-2.5 sm:grid-cols-2">
@@ -94,9 +91,11 @@ export function EmptyState({
         ))}
       </div>
 
+      <QuickLinks className="relative mt-7 max-w-2xl" />
+
       <p className="relative mt-6 flex items-center gap-1.5 text-[0.68rem] text-stone-400">
-        <span className="h-1.5 w-1.5 rounded-full bg-kbn-400" />
-        Please don&apos;t share personal details · 38 indexed KBN records
+        <span className="h-1.5 w-1.5 rounded-full bg-gold-500" />
+        Please don&apos;t share personal details. Official information: kbn.university
       </p>
     </div>
   );
