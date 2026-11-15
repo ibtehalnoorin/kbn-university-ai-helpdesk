@@ -1,0 +1,19 @@
+[project]
+name = "kbn-university-ai-helpdesk"
+version = "1.0.0"
+description = "Source-grounded helpdesk chatbot for KBN University"
+requires-python = ">=3.11"
+# Keep in sync with backend/requirements-prod.txt (a test enforces this).
+dependencies = [
+    "chromadb~=1.5.9",
+    "ollama~=0.6.3",
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.30,<1",
+    "httpx>=0.27,<1",
+    "pydantic-settings>=2.4,<3",
+    "fastembed>=0.5,<1",
+    "psycopg[binary,pool]>=3.2,<4",
+]
+
+[tool.vercel]
+entrypoint = "index:app"

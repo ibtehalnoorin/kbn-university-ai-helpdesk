@@ -30,6 +30,13 @@ CREATE TABLE IF NOT EXISTS sessions (
     updated_at timestamptz NOT NULL
 );
 CREATE INDEX IF NOT EXISTS sessions_updated_at_idx ON sessions (updated_at);
+CREATE TABLE IF NOT EXISTS counters (
+    key text NOT NULL,
+    bucket bigint NOT NULL,
+    n integer NOT NULL,
+    expires_at timestamptz NOT NULL,
+    PRIMARY KEY (key, bucket)
+);
 """
 
 
@@ -191,6 +198,24 @@ class PostgresSessionStore:
             cur.execute("DELETE FROM sessions WHERE updated_at < %s", (cutoff,))
             return cur.rowcount
 
+    # ------------------------------------------------------------------ shared counters
+    def incr_counter(self, key: str, bucket: int, ttl_seconds: int, amount: int = 1) -> int:
+        """Atomically add ``amount`` to a counter shared by every server instance."""
+        expires = _now() + timedelta(seconds=ttl_seconds)
+        with self._tx() as cur:
+            cur.execute(
+                "INSERT INTO counters (key, bucket, n, expires_at) VALUES (%s, %s, %s, %s) "
+                "ON CONFLICT (key, bucket) DO UPDATE SET n = counters.n + EXCLUDED.n, "
+                "expires_at = GREATEST(counters.expires_at, EXCLUDED.expires_at) RETURNING n",
+                (key, bucket, amount, expires),
+            )
+            return cur.fetchone()[0]
+
+    def purge_counters(self) -> int:
+        with self._tx() as cur:
+            cur.execute("DELETE FROM counters WHERE expires_at < %s", (_now(),))
+            return cur.rowcount
+
     def health(self) -> dict:
         try:
             return {"status": "ok", "kind": "postgres", "sessions": self.count()}
@@ -203,7 +228,7 @@ class PostgresSessionStore:
     # ------------------------------------------------------------------ test hooks
     def truncate_for_tests(self) -> None:
         with self._tx() as cur:
-            cur.execute("TRUNCATE sessions")
+            cur.execute("TRUNCATE sessions, counters")
 
     def set_updated_at_for_tests(self, session_id: str, when: datetime) -> None:
         with self._tx() as cur:
