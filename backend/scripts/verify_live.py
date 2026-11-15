@@ -12,6 +12,11 @@ python backend/scripts/verify_live.py --mode hallucinations
 # All seven university questions (Qwen3:8B on CPU: allow roughly 20 min/question)
 python backend/scripts/verify_live.py --mode all
 
+# Against the hosted setup (Groq): answers take seconds. The server under test must run
+# with raised per-visitor limits because this script sends many requests from one address:
+#   KBN_RATE_LIMIT_PER_MINUTE=1000 KBN_RATE_LIMIT_SESSIONS_PER_HOUR=1000 \
+#   KBN_LLM_PROVIDER=groq KBN_GROQ_API_KEY=... python backend/run_server.py
+
 # Resume an interrupted run
 python backend/scripts/verify_live.py --mode valid --resume
 """
