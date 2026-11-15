@@ -1,3 +1,19 @@
+export type EnquiryTopic = "admissions" | "fees" | "exams" | "hostel" | "other";
+
+export interface EnquiryPayload {
+  name: string;
+  contact: string;
+  topic: EnquiryTopic;
+  message: string;
+  consent: boolean;
+  session_id?: string | null;
+}
+
+export interface EnquiryReceipt {
+  id: string;
+  received: boolean;
+}
+
 export type VerificationStatus =
   | "verified_kb"
   | "general_unverified"

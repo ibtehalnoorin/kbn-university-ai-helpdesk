@@ -5,7 +5,9 @@ import {
   MapPin,
   Trophy,
   Users,
+  Headset,
 } from "lucide-react";
+import { useEnquiry } from "../lib/enquiry";
 import { QuickLinks } from "./QuickLinks";
 
 const suggestions = [
@@ -48,6 +50,7 @@ export function EmptyState({
   onPick: (prompt: string) => void;
   disabled?: boolean;
 }) {
+  const { openEnquiry } = useEnquiry();
   return (
     <div className="relative flex flex-1 flex-col items-center justify-center px-4 py-10 text-center sm:py-16">
       <div className="hero-grid pointer-events-none absolute inset-0 opacity-60" aria-hidden="true" />
@@ -90,6 +93,15 @@ export function EmptyState({
           </button>
         ))}
       </div>
+
+      <button
+        type="button"
+        onClick={openEnquiry}
+        className="relative mt-6 inline-flex items-center gap-2 rounded-xl bg-gold-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-gold-600/30 transition hover:bg-gold-500"
+      >
+        <Headset className="h-4 w-4" aria-hidden="true" />
+        Talk to the admissions office
+      </button>
 
       <QuickLinks className="relative mt-7 max-w-2xl" />
 

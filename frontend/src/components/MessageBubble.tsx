@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Headset,
   BookOpenCheck,
   Check,
   Clock3,
@@ -8,11 +9,13 @@ import {
 } from "lucide-react";
 import type { Message } from "../api/types";
 import { formatDuration, formatTime } from "../lib/format";
+import { useEnquiry } from "../lib/enquiry";
 import { Markdown } from "./Markdown";
 import { SourceList } from "./SourceList";
 import { VerificationBadge, VerificationNote } from "./VerificationBadge";
 
 export function MessageBubble({ message }: { message: Message }) {
+  const { openEnquiry } = useEnquiry();
   const [copied, setCopied] = useState(false);
   const isUser = message.role === "user";
 
@@ -91,6 +94,16 @@ export function MessageBubble({ message }: { message: Message }) {
           ) : null}
           {message.verification ? (
             <VerificationNote verification={message.verification} />
+          ) : null}
+          {message.verification?.status === "unavailable" ? (
+            <button
+              type="button"
+              onClick={openEnquiry}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-gold-300 bg-gold-200/30 px-3 py-1.5 text-xs font-semibold text-gold-600 transition hover:bg-gold-200/60"
+            >
+              <Headset className="h-3.5 w-3.5" aria-hidden="true" />
+              Not what you needed? Talk to the admissions office
+            </button>
           ) : null}
           <SourceList sources={message.sources} />
         </div>

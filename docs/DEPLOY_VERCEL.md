@@ -68,6 +68,26 @@ Vercel Authentication; the project's main address (`<project>.vercel.app`) is th
 `KBN_RATE_LIMIT_*` settings they need on the server being tested; for a real deployment
 set them temporarily in Vercel and redeploy, then remove them).
 
+## Branding, knowledge and the admissions enquiry form
+
+- **Branding.** The interface uses the university's logo, emblem and tagline ("Educating Humanity") and the
+  navy `#33436b` / maroon `#903132` colours taken from the logo. Assets live in `frontend/public/brand/`; the
+  palette is the `--color-kbn-*` (navy) and `--color-gold-*` (maroon) variables in `frontend/src/index.css`.
+  Use of the logo and name should have the university's approval.
+- **Knowledge.** `knowledge_docs/` holds 100+ pages from kbn.university. To refresh it from the website:
+  `python backend/scripts/crawl_site.py && python backend/scripts/reindex.py`, commit `knowledge_docs/` and
+  `local_vector_kb/`, then redeploy. The crawler deliberately skips examination results, admitted-student lists,
+  archives and question papers (they name individuals and are mostly out of date). Fee tables on the site are
+  images/PDFs, so fee questions point visitors to the official fee page.
+- **"Talk to the admissions office".** Visitors leave name, email or phone, topic and a question, with explicit
+  consent. Enquiries are saved (Postgres) and deleted after `KBN_ENQUIRY_RETENTION_DAYS` (180). Settings:
+
+| Variable | Purpose |
+| --- | --- |
+| `KBN_ADMIN_TOKEN` | Enables the staff view: `GET /internal/enquiries` with header `Authorization: Bearer <token>`. Without it the view is off |
+| `KBN_ENQUIRY_WEBHOOK_URL` | Optional. Every enquiry is also POSTed as JSON to this URL (an email service, a Google Sheet via Apps Script or Zapier, Slack...). A failing webhook never loses the enquiry |
+| `KBN_RATE_LIMIT_ENQUIRIES_PER_HOUR` | Per visitor, default 5 |
+
 ## Speed: put the function next to the database
 
 Every request makes a few database round trips. If the Vercel function and the Neon database are on

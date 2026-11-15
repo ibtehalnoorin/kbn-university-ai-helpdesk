@@ -7,8 +7,10 @@ import {
   Pencil,
   Trash2,
   X,
+  Headset,
 } from "lucide-react";
 import type { HealthResponse, SessionSummary } from "../api/types";
+import { useEnquiry } from "../lib/enquiry";
 import { relativeTime } from "../lib/format";
 import { HealthPill } from "./HealthPill";
 
@@ -37,6 +39,7 @@ export function Sidebar({
   onRename: (id: string, title: string) => Promise<void>;
   onRequestDelete: (session: SessionSummary) => void;
 }) {
+  const { openEnquiry } = useEnquiry();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
@@ -129,6 +132,14 @@ export function Sidebar({
               <MessageSquarePlus className="h-4 w-4" aria-hidden="true" />
             )}
             {creating ? "Creating…" : "New conversation"}
+          </button>
+          <button
+            type="button"
+            onClick={openEnquiry}
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-gold-300 bg-white px-3 py-2 text-sm font-semibold text-gold-600 transition-colors hover:bg-gold-200/40"
+          >
+            <Headset className="h-4 w-4" aria-hidden="true" />
+            Talk to admissions
           </button>
         </div>
 
