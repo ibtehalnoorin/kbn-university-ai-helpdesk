@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Request, status
 
+from app.api.deps import client_id, require_owner
 from app.errors import SessionBusyError
 from app.schemas import (
     DeleteSessionResponse,
@@ -30,17 +31,20 @@ async def create_session(
     request: Request,
     payload: SessionCreateRequest | None = None,
 ) -> SessionDetail:
-    return request.app.state.session_store.create(payload.title if payload else None)
+    return request.app.state.session_store.create(
+        payload.title if payload else None, owner=client_id(request)
+    )
 
 
 @router.get("", response_model=SessionList, summary="List conversation sessions")
 async def list_sessions(request: Request) -> SessionList:
-    sessions = request.app.state.session_store.list()
+    sessions = request.app.state.session_store.list(owner=client_id(request))
     return SessionList(sessions=sessions, count=len(sessions))
 
 
 @router.get("/{session_id}", response_model=SessionDetail, summary="Get a session transcript")
 async def get_session(session_id: str, request: Request) -> SessionDetail:
+    require_owner(request, session_id)
     return request.app.state.session_store.detail(session_id)
 
 
@@ -50,6 +54,7 @@ async def rename_session(
     payload: SessionRenameRequest,
     request: Request,
 ) -> SessionDetail:
+    require_owner(request, session_id)
     return request.app.state.session_store.rename(session_id, payload.title)
 
 
@@ -59,6 +64,7 @@ async def rename_session(
     summary="Delete a session and its transcript",
 )
 async def delete_session(session_id: str, request: Request) -> DeleteSessionResponse:
+    require_owner(request, session_id)
     if _chat(request).is_busy(session_id):
         raise SessionBusyError(
             "This conversation is still waiting for an answer and cannot be deleted."
@@ -73,6 +79,7 @@ async def delete_session(session_id: str, request: Request) -> DeleteSessionResp
     summary="Clear a conversation while keeping the session",
 )
 async def clear_session(session_id: str, request: Request) -> SessionDetail:
+    require_owner(request, session_id)
     if _chat(request).is_busy(session_id):
         raise SessionBusyError(
             "This conversation is still waiting for an answer and cannot be cleared."

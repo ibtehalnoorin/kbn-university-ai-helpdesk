@@ -147,3 +147,16 @@ def test_unreachable_database_does_not_crash_construction_but_reports_errors():
             store.create()
     finally:
         store.close()
+
+
+def test_sessions_are_listed_per_owner(make_store):
+    store = make_store()
+    a = store.create(owner="owner-a-aaaaaaaaaaaa").id
+    b = store.create(owner="owner-b-bbbbbbbbbbbb").id
+    legacy = store.create().id
+    assert [s.id for s in store.list(owner="owner-a-aaaaaaaaaaaa")] == [a]
+    assert [s.id for s in store.list(owner="owner-b-bbbbbbbbbbbb")] == [b]
+    assert [s.id for s in store.list(owner=None)] == [legacy]
+    assert store.owner_of(a) == "owner-a-aaaaaaaaaaaa" and store.owner_of(legacy) is None
+    with pytest.raises(NotFoundError):
+        store.owner_of("missing")

@@ -5,6 +5,7 @@ import type {
   SessionDetail,
   SessionList,
 } from "./types";
+import { getClientId } from "../lib/storage";
 
 const inferredBase = import.meta.env.DEV ? "http://127.0.0.1:8000" : "";
 export const API_BASE = String(
@@ -37,6 +38,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ...init,
       headers: {
         Accept: "application/json",
+        "X-Client-Id": getClientId(),
         ...(init?.body ? { "Content-Type": "application/json" } : {}),
         ...init?.headers,
       },

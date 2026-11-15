@@ -99,8 +99,10 @@ class PostgresSessionStore:
         return SessionDetail(**summary.model_dump(), messages=list(record.messages))
 
     # ------------------------------------------------------------------ public API
-    def create(self, title: str | None = None) -> SessionDetail:
-        record = SessionRecord(id=str(uuid.uuid4()), title=(title or "New conversation")[:80])
+    def create(self, title: str | None = None, owner: str | None = None) -> SessionDetail:
+        record = SessionRecord(
+            id=str(uuid.uuid4()), title=(title or "New conversation")[:80], owner=owner
+        )
         with self._tx() as cur:
             cur.execute("LOCK TABLE sessions IN SHARE ROW EXCLUSIVE MODE")
             cur.execute("SELECT count(*) FROM sessions")
@@ -115,9 +117,17 @@ class PostgresSessionStore:
             )
         return self._detail(record)
 
-    def list(self) -> list[SessionSummary]:
+    def owner_of(self, session_id: str) -> str | None:
         with self._tx() as cur:
-            cur.execute("SELECT data FROM sessions ORDER BY updated_at DESC")
+            return self._fetch(cur, session_id).owner
+
+    def list(self, owner: str | None = None) -> list[SessionSummary]:
+        with self._tx() as cur:
+            cur.execute(
+                "SELECT data FROM sessions WHERE data->>'owner' IS NOT DISTINCT FROM %s "
+                "ORDER BY updated_at DESC",
+                (owner,),
+            )
             return [SessionStore._summary(SessionRecord.model_validate(r[0])) for r in cur.fetchall()]
 
     def detail(self, session_id: str) -> SessionDetail:

@@ -37,6 +37,7 @@ class SessionRecord(BaseModel):
     created_at: datetime = Field(default_factory=_now)
     updated_at: datetime = Field(default_factory=_now)
     generation: int = 0
+    owner: str | None = None
     messages: list[Message] = Field(default_factory=list)
 
 
@@ -114,7 +115,7 @@ class SessionStore:
         return record
 
     # ------------------------------------------------------------------ public API
-    def create(self, title: str | None = None) -> SessionDetail:
+    def create(self, title: str | None = None, owner: str | None = None) -> SessionDetail:
         with self._lock:
             if len(self._sessions) >= self.max_sessions:
                 raise SessionLimitError(
@@ -124,15 +125,20 @@ class SessionStore:
             record = SessionRecord(
                 id=str(uuid.uuid4()),
                 title=(title or "New conversation")[:80],
+                owner=owner,
             )
             self._sessions[record.id] = record
             self._save()
             return self.detail(record.id)
 
-    def list(self) -> list[SessionSummary]:
+    def owner_of(self, session_id: str) -> str | None:
+        with self._lock:
+            return self._get_record(session_id).owner
+
+    def list(self, owner: str | None = None) -> list[SessionSummary]:
         with self._lock:
             records = sorted(
-                self._sessions.values(),
+                (r for r in self._sessions.values() if r.owner == owner),
                 key=lambda item: item.updated_at,
                 reverse=True,
             )

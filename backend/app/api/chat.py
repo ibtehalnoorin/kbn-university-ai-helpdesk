@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Request
 
+from app.api.deps import require_owner
 from app.schemas import ChatRequest, ChatResponse
 
 router = APIRouter(tags=["chat"])
@@ -21,4 +22,5 @@ router = APIRouter(tags=["chat"])
     },
 )
 async def chat(payload: ChatRequest, request: Request) -> ChatResponse:
+    require_owner(request, payload.session_id)
     return await request.app.state.chat_service.chat(payload)
