@@ -1,0 +1,4 @@
+chromadb~=1.5.9
+ollama~=0.6.3
+ddgs~=9.16.1
+crawl4ai>=0.9.5

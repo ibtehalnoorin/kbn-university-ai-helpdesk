@@ -1,0 +1,56 @@
+# ---- Python -------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# ---- Node / frontend ----------------------------------------------------
+node_modules/
+frontend/dist/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---- Secrets and local configuration -----------------------------------
+# Keep the placeholders, never the real values.
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+*.pem
+*.key
+*.pfx
+credentials.json
+secrets.json
+.gcloud/
+.aws/
+
+# ---- Runtime data -------------------------------------------------------
+# Chat transcripts can contain personal questions; they stay local.
+backend/data/
+backend/reports/
+*.log
+logs/
+*.tmp
+*.temp
+*.bak
+*.previous
+
+# ---- OS / editor --------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
