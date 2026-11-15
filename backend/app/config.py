@@ -13,6 +13,7 @@ from pathlib import Path
 
 from typing import Literal
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -125,6 +126,8 @@ class Settings(BaseSettings):
     database_url: str = ""
     session_retention_days: int = 30
     database_connect_timeout_seconds: float = 5.0
+    # Vercel Cron authenticates with `Authorization: Bearer $CRON_SECRET`. Empty = cron disabled.
+    cron_secret: str = Field(default="", validation_alias=AliasChoices("KBN_CRON_SECRET", "CRON_SECRET"))
     protected_manifest_path: str = "protected_files.sha256"
 
     # Tests can start the API without spawning the LLM worker.

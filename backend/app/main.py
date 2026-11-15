@@ -17,13 +17,19 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api import chat as chat_routes
+from app.api import cron as cron_routes
 from app.api import health as health_routes
 from app.api import sessions as session_routes
 from app.config import PROJECT_ROOT, Settings, get_settings
 from app.errors import AppError
 from app.logging_config import configure_logging
 from app.services.chat_service import ChatService
-from app.services.rate_limit import DailyBudget, SlidingWindowLimiter
+from app.services.rate_limit import (
+    DailyBudget,
+    SharedDailyBudget,
+    SharedWindowLimiter,
+    SlidingWindowLimiter,
+)
 from app.services.health_service import HealthService
 from app.services.retrieval import RetrievalService
 from app.services.store_factory import make_store
@@ -38,6 +44,9 @@ async def _purge_once(store, days: int) -> None:
         removed = await asyncio.to_thread(store.purge_older_than, days)
         if removed:
             logger.info("Retention purge removed %s session(s) older than %s days", removed, days)
+        purge_counters = getattr(store, "purge_counters", None)
+        if purge_counters:  # does not depend on the Vercel cron being configured
+            await asyncio.to_thread(purge_counters)
     except Exception:
         logger.exception("Retention purge failed")
 
@@ -80,19 +89,33 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
                 worker_start_error = str(exc)
                 logger.exception("Could not start the LLM worker at startup")
 
+        # With Postgres the counters are shared by every server instance (serverless hosts
+        # run many); without it they live in this process, which is fine for one instance.
+        shared = hasattr(store, "incr_counter")
+        mult = settings.rate_limit_ip_multiplier
+
+        def make_limiter(limit: int, window: float, name: str):
+            if shared:
+                return SharedWindowLimiter(store, limit, window, name)
+            return SlidingWindowLimiter(limit, window)
+
+        budget = (
+            SharedDailyBudget(store, settings.daily_llm_budget, settings.per_ip_daily_llm_calls)
+            if shared
+            else DailyBudget(settings.daily_llm_budget, per_key_max=settings.per_ip_daily_llm_calls)
+        )
         chat_service = ChatService(
             settings,
             store,
             retrieval,
             worker,
-            budget=DailyBudget(settings.daily_llm_budget, per_key_max=settings.per_ip_daily_llm_calls),
+            budget=budget,
         )
-        mult = settings.rate_limit_ip_multiplier
-        app.state.chat_limiter = SlidingWindowLimiter(settings.rate_limit_per_minute, 60)
-        app.state.chat_limiter_ip = SlidingWindowLimiter(settings.rate_limit_per_minute * mult, 60)
-        app.state.session_limiter = SlidingWindowLimiter(settings.rate_limit_sessions_per_hour, 3600)
-        app.state.session_limiter_ip = SlidingWindowLimiter(
-            settings.rate_limit_sessions_per_hour * mult, 3600
+        app.state.chat_limiter = make_limiter(settings.rate_limit_per_minute, 60, "chat")
+        app.state.chat_limiter_ip = make_limiter(settings.rate_limit_per_minute * mult, 60, "chat-ip")
+        app.state.session_limiter = make_limiter(settings.rate_limit_sessions_per_hour, 3600, "sess")
+        app.state.session_limiter_ip = make_limiter(
+            settings.rate_limit_sessions_per_hour * mult, 3600, "sess-ip"
         )
         health_service = HealthService(settings, retrieval, worker, store)
 
@@ -217,6 +240,7 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
         )
 
     app.include_router(chat_routes.router)
+    app.include_router(cron_routes.router)
     app.include_router(health_routes.router)
     app.include_router(session_routes.router)
 

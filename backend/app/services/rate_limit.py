@@ -91,6 +91,61 @@ class DailyBudget:
                 self._per_key[key] -= 1
 
 
+class SharedWindowLimiter:
+    """Fixed-window limiter whose counters live in a shared store (Postgres).
+
+    Every server instance increments the same counter, so the limit holds when the
+    platform runs several copies of the app. A fixed window can admit up to twice the
+    limit across a window boundary; that is acceptable for abuse protection.
+    """
+
+    def __init__(self, store, limit: int, window_seconds: float, name: str) -> None:
+        self.store, self.limit, self.window, self.name = store, limit, window_seconds, name
+
+    def allow(self, key: str, now: float | None = None) -> bool:
+        now = time.time() if now is None else now
+        bucket = int(now // self.window)
+        used = self.store.incr_counter(f"{self.name}:{key}", bucket, int(self.window * 2))
+        return used <= self.limit
+
+    def retry_after(self, key: str, now: float | None = None) -> int:
+        now = time.time() if now is None else now
+        return max(1, math.ceil(self.window - (now % self.window)))
+
+
+class SharedDailyBudget:
+    """Daily LLM budget (overall and per client key) shared by every server instance."""
+
+    TTL = 2 * 86400
+
+    def __init__(self, store, max_calls: int, per_key_max: int | None = None) -> None:
+        self.store, self.max_calls, self.per_key_max = store, max_calls, per_key_max
+
+    def _keys(self, key: str | None) -> list[str]:
+        return ["budget:all"] + ([f"budget:key:{key}"] if key is not None and self.per_key_max is not None else [])
+
+    def try_consume(self, now: float | None = None, key: str | None = None) -> bool:
+        if self.max_calls <= 0:
+            return False
+        day = int((time.time() if now is None else now) // 86400)
+        limits = {"budget:all": self.max_calls}
+        if key is not None and self.per_key_max is not None:
+            limits[f"budget:key:{key}"] = self.per_key_max
+        taken: list[str] = []
+        for name in self._keys(key):
+            taken.append(name)
+            if self.store.incr_counter(name, day, self.TTL) > limits[name]:
+                for undo in taken:  # over the cap: put back everything this call added
+                    self.store.incr_counter(undo, day, self.TTL, amount=-1)
+                return False
+        return True
+
+    def refund(self, key: str | None = None, now: float | None = None) -> None:
+        day = int((time.time() if now is None else now) // 86400)
+        for name in self._keys(key):
+            self.store.incr_counter(name, day, self.TTL, amount=-1)
+
+
 def client_ip(request: Request, trusted_hops: int = 1) -> str:
     """The caller's address behind ``trusted_hops`` proxies that append to X-Forwarded-For.
 

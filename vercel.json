@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "python backend/scripts/vercel_build.py",
+  "functions": {
+    "index.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{frontend/node_modules/**,frontend/src/**,docs/**,backend/tests/**,backend/reports/**,backend/data/**,.github/**}"
+    }
+  },
+  "crons": [
+    { "path": "/internal/cron/purge", "schedule": "0 3 * * *" }
+  ]
+}

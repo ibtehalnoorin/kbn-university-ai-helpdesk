@@ -160,3 +160,17 @@ def test_sessions_are_listed_per_owner(make_store):
     assert store.owner_of(a) == "owner-a-aaaaaaaaaaaa" and store.owner_of(legacy) is None
     with pytest.raises(NotFoundError):
         store.owner_of("missing")
+
+
+@pytest.mark.skipif(not DB_URL, reason="no TEST_DATABASE_URL")
+def test_prepared_statements_are_disabled_for_pgbouncer_poolers():
+    # Neon's pooled connection string runs behind PgBouncer (transaction mode), where
+    # psycopg's automatic prepared statements fail with "prepared statement does not exist".
+    from app.services.pg_session_store import PostgresSessionStore
+
+    store = PostgresSessionStore(DB_URL)
+    try:
+        with store._pool.connection() as conn:
+            assert conn.prepare_threshold is None
+    finally:
+        store.close()

@@ -9,7 +9,8 @@ DB_PATH = "./local_vector_kb"
 class KnowledgeBase:
     def __init__(self, collection_name="local_research_kb"):
         # Initialize persistent ChromaDB client stored locally on disk
-        self.client = chromadb.PersistentClient(path=DB_PATH)
+        # KBN_CHROMA_DIR lets read-only hosts (Vercel) point at a writable copy.
+        self.client = chromadb.PersistentClient(path=os.environ.get("KBN_CHROMA_DIR") or DB_PATH)
         self.collection = self.client.get_or_create_collection(name=collection_name)
 
     def _get_embedding(self, text: str) -> list[float]:

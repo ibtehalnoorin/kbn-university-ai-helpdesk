@@ -65,3 +65,20 @@ def test_database_outage_degrades_health_and_returns_503(tmp_path, monkeypatch):
         response = client.post("/sessions", json={})
         assert response.status_code == 503
         assert response.json()["error"]["code"] == "store_unavailable"
+
+
+def test_startup_also_purges_expired_counters(tmp_path, monkeypatch):
+    # Without CRON_SECRET the daily cron never authenticates; counters must not pile up.
+    from app.services.pg_session_store import PostgresSessionStore
+
+    seed = PostgresSessionStore(DB_URL)
+    seed.truncate_for_tests()
+    seed.incr_counter("expired", 1, ttl_seconds=-5)
+    seed.close()
+    with TestClient(_app(tmp_path, monkeypatch)):
+        pass
+    check = PostgresSessionStore(DB_URL)
+    try:
+        assert check.incr_counter("expired", 1, ttl_seconds=60) == 1  # row was gone, so this starts at 1
+    finally:
+        check.close()

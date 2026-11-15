@@ -10,7 +10,7 @@ Every university answer is checked against the retrieved records before it is re
 If the records do not support an answer, the app returns one fixed fallback sentence
 instead of guessing. It can run fully local (Ollama) or, for a public launch, on free
 hosted services (Groq for the model, Neon for chat storage); see
-[docs/DEPLOY.md](docs/DEPLOY.md).
+[docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md) (Vercel) or [docs/DEPLOY.md](docs/DEPLOY.md) (Render).
 
 ---
 
