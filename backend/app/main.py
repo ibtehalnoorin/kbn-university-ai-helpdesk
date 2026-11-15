@@ -18,6 +18,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api import chat as chat_routes
 from app.api import cron as cron_routes
+from app.api import enquiries as enquiry_routes
 from app.api import health as health_routes
 from app.api import sessions as session_routes
 from app.config import PROJECT_ROOT, Settings, get_settings
@@ -39,8 +40,10 @@ from app.services.worker_factory import make_worker
 logger = logging.getLogger("kbn.api")
 
 
-async def _purge_once(store, days: int) -> None:
+async def _purge_once(store, days: int, enquiry_days: int | None = None) -> None:
     try:
+        if enquiry_days is not None and hasattr(store, "purge_enquiries_older_than"):
+            await asyncio.to_thread(store.purge_enquiries_older_than, enquiry_days)
         removed = await asyncio.to_thread(store.purge_older_than, days)
         if removed:
             logger.info("Retention purge removed %s session(s) older than %s days", removed, days)
@@ -78,7 +81,7 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
                 "KBN_DATABASE_URL is not set: conversations are kept on local disk and are "
                 "lost whenever this instance restarts or sleeps. Set a Postgres URL."
             )
-        await _purge_once(store, settings.session_retention_days)
+        await _purge_once(store, settings.session_retention_days, settings.enquiry_retention_days)
         purge_task = asyncio.create_task(_retention_loop(store, settings.session_retention_days))
         worker = make_worker(settings, ollama_cls=WorkerClient)
         worker_start_error: str | None = None
@@ -116,6 +119,10 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
         app.state.session_limiter = make_limiter(settings.rate_limit_sessions_per_hour, 3600, "sess")
         app.state.session_limiter_ip = make_limiter(
             settings.rate_limit_sessions_per_hour * mult, 3600, "sess-ip"
+        )
+        app.state.enquiry_limiter = make_limiter(settings.rate_limit_enquiries_per_hour, 3600, "enq")
+        app.state.enquiry_limiter_ip = make_limiter(
+            settings.rate_limit_enquiries_per_hour * mult, 3600, "enq-ip"
         )
         health_service = HealthService(settings, retrieval, worker, store)
 
@@ -241,6 +248,7 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
 
     app.include_router(chat_routes.router)
     app.include_router(cron_routes.router)
+    app.include_router(enquiry_routes.router)
     app.include_router(health_routes.router)
     app.include_router(session_routes.router)
 

@@ -35,4 +35,8 @@ async def purge(request: Request) -> dict:
     sessions = await asyncio.to_thread(store.purge_older_than, settings.session_retention_days)
     purge_counters = getattr(store, "purge_counters", None)
     counters = await asyncio.to_thread(purge_counters) if purge_counters else 0
-    return {"sessions_removed": sessions, "counters_removed": counters}
+    purge_enquiries = getattr(store, "purge_enquiries_older_than", None)
+    enquiries = (
+        await asyncio.to_thread(purge_enquiries, settings.enquiry_retention_days) if purge_enquiries else 0
+    )
+    return {"sessions_removed": sessions, "counters_removed": counters, "enquiries_removed": enquiries}

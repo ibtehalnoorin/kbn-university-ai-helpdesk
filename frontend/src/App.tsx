@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BookOpenText, RefreshCw, ServerCrash } from "lucide-react";
+import { RefreshCw, ServerCrash } from "lucide-react";
 import { ApiError, api, isBusy, isNotFound, isTimeout } from "./api/client";
 import type {
   HealthResponse,
@@ -513,13 +513,18 @@ export default function App() {
     return (
       <div className="helpdesk-bg flex min-h-dvh items-center justify-center px-6">
         <div className="text-center">
-          <span className="mx-auto grid h-14 w-14 animate-pulse-soft place-items-center rounded-2xl border border-gold-300/70 bg-gradient-to-br from-kbn-800 to-kbn-950 text-gold-300 shadow-lg shadow-kbn-950/20">
-            <BookOpenText className="h-7 w-7" aria-hidden="true" />
-          </span>
-          <h1 className="mt-4 font-display text-xl font-semibold text-kbn-950">
-            KBN University Helpdesk
+          <img
+            src="/brand/kbn-mark.png"
+            alt=""
+            width={72}
+            height={72}
+            className="mx-auto h-[4.5rem] w-[4.5rem] animate-pulse-soft object-contain"
+          />
+          <h1 className="mt-4 font-display text-xl font-semibold text-kbn-600">
+            Khaja Bandanawaz University
           </h1>
-          <p className="mt-1 text-sm text-stone-500">Connecting to the helpdesk…</p>
+          <p className="mt-1 text-sm italic text-stone-500">Educating Humanity</p>
+          <p className="mt-3 text-xs text-stone-400">Connecting to the helpdesk…</p>
         </div>
       </div>
     );

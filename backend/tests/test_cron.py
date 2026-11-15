@@ -45,7 +45,7 @@ def test_cron_purges_expired_sessions_with_the_right_secret(make_client):
         store._sessions[stale].updated_at = datetime.now(timezone.utc) - timedelta(days=45)
         response = client.get("/internal/cron/purge", headers={"Authorization": f"Bearer {SECRET}"})
         assert response.status_code == 200
-        assert response.json() == {"sessions_removed": 1, "counters_removed": 0}
+        assert response.json() == {"sessions_removed": 1, "counters_removed": 0, "enquiries_removed": 0}
         assert [s.id for s in store.list()] == [fresh]
 
 

@@ -155,3 +155,13 @@ def test_status_reports_provider_and_model():
     status = client.status()
     assert status["provider"] == "groq" and status["model"] == "test-model"
     assert client.alive is True and client.pending_count == 0
+
+
+@pytest.mark.parametrize("status", [401, 403, 500, 503])
+def test_server_side_failures_give_visitors_a_friendly_message(status):
+    client = _client(lambda request: httpx.Response(status, json={"error": {"message": "invalid api key"}}))
+    with pytest.raises(WorkerResultError) as info:
+        _wait(client, _submit(client))
+    message = str(info.value)
+    assert "temporarily unavailable" in message.lower()
+    assert str(status) not in message and "key" not in message.lower()  # no internals for visitors

@@ -7,6 +7,7 @@ import re
 from fastapi import Request
 
 from app.errors import NotFoundError, RateLimitedError, ValidationAppError
+from app.services.rate_limit import check_limits
 from app.services.rate_limit import client_ip as _client_ip
 
 _CLIENT_ID = re.compile(r"^[A-Za-z0-9_-]{16,80}$")
@@ -40,19 +41,21 @@ def _limit(request: Request, limiter_name: str, what: str) -> None:
     state = request.app.state
     ip = _client_ip(request, state.settings.trusted_proxy_hops)
     visitor = client_id(request) or ip
-    for limiter, key in (
-        (getattr(state, limiter_name + "_ip"), ip),
-        (getattr(state, limiter_name), visitor),
-    ):
-        if not limiter.allow(key):
-            raise RateLimitedError(
-                f"Too many {what}. Please wait a moment and try again.",
-                retry_after=limiter.retry_after(key),
-            )
+    retry_after = check_limits(
+        [(getattr(state, limiter_name + "_ip"), ip), (getattr(state, limiter_name), visitor)]
+    )
+    if retry_after is not None:
+        raise RateLimitedError(
+            f"Too many {what}. Please wait a moment and try again.", retry_after=retry_after
+        )
 
 
 def limit_chat(request: Request) -> None:
     _limit(request, "chat_limiter", "questions")
+
+
+def limit_enquiries(request: Request) -> None:
+    _limit(request, "enquiry_limiter", "enquiries")
 
 
 def limit_new_sessions(request: Request) -> None:

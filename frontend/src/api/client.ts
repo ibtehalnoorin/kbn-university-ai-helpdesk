@@ -1,6 +1,8 @@
 import type {
   ChatResponse,
   DeleteSessionResponse,
+  EnquiryPayload,
+  EnquiryReceipt,
   HealthResponse,
   SessionDetail,
   SessionList,
@@ -112,6 +114,9 @@ export const api = {
     request<SessionDetail>(`/sessions/${encodeURIComponent(id)}/clear`, {
       method: "POST",
     }),
+
+  sendEnquiry: (payload: EnquiryPayload) =>
+    request<EnquiryReceipt>("/enquiries", jsonBody(payload)),
 
   sendChat: (sessionId: string, message: string) =>
     request<ChatResponse>("/chat", jsonBody({ session_id: sessionId, message })),

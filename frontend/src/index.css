@@ -5,26 +5,28 @@
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, "Noto Sans", sans-serif;
   --font-display:
-    "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia,
-    Cambria, "Times New Roman", serif;
+    "Cinzel", "Trajan Pro", "Iowan Old Style", "Palatino Linotype", Palatino,
+    "Book Antiqua", Georgia, Cambria, "Times New Roman", serif;
 
-  --color-kbn-950: #03211a;
-  --color-kbn-900: #06382c;
-  --color-kbn-800: #0a4a3a;
-  --color-kbn-700: #0e5f4a;
-  --color-kbn-600: #137a5e;
-  --color-kbn-500: #1a9a76;
-  --color-kbn-400: #35b892;
-  --color-kbn-300: #6fd3b5;
-  --color-kbn-200: #a6e6d2;
-  --color-kbn-100: #d3f3e8;
-  --color-kbn-50: #eefaf5;
+  /* KBN navy (logo #33436b) */
+  --color-kbn-950: #0c1326;
+  --color-kbn-900: #151e3a;
+  --color-kbn-800: #222f52;
+  --color-kbn-700: #2b3a60;
+  --color-kbn-600: #33436b;
+  --color-kbn-500: #4a5d8a;
+  --color-kbn-400: #7084ad;
+  --color-kbn-300: #a0afcc;
+  --color-kbn-200: #c9d2e4;
+  --color-kbn-100: #e3e8f1;
+  --color-kbn-50: #f2f4f9;
 
-  --color-gold-600: #a9861b;
-  --color-gold-500: #c9a227;
-  --color-gold-400: #e0bd4a;
-  --color-gold-300: #efd27a;
-  --color-gold-200: #f7e6b3;
+  /* KBN maroon (logo #903132); the "gold" token names are kept so components need no renames */
+  --color-gold-600: #903132;
+  --color-gold-500: #a64446;
+  --color-gold-400: #c06b6c;
+  --color-gold-300: #dba3a4;
+  --color-gold-200: #eed3d3;
 
   --color-sand-50: #fbf9f4;
   --color-sand-100: #f5f1e7;

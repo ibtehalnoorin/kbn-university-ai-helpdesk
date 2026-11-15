@@ -178,8 +178,9 @@ class GroqWorkerClient:
         if response.status_code == 413:
             raise _PayloadTooLarge()
         if response.status_code >= 400:
+            # Details (an expired key, an outage) belong in the logs, not in front of visitors.
             logger.error("Groq error %s: %s", response.status_code, response.text[:300])
-            raise WorkerResultError(f"The language model returned an error ({response.status_code}).")
+            raise WorkerResultError("The assistant is temporarily unavailable. Please try again in a little while.")
         try:
             choice = response.json()["choices"][0]
             content = choice["message"]["content"]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime, timezone
 from typing import Any, Literal
 
@@ -175,3 +176,48 @@ class HealthResponse(BaseModel):
     worker: dict[str, Any]
     configuration: dict[str, Any]
     protected_files: dict[str, Any]
+
+
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]{2,}$")
+_PHONE_RE = re.compile(r"^\+?[\d\s().-]{7,20}$")
+
+
+class EnquiryRequest(BaseModel):
+    """A visitor's request to be contacted by the university (needs explicit consent)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=80)
+    contact: str = Field(min_length=5, max_length=120)
+    topic: Literal["admissions", "fees", "exams", "hostel", "other"] = "admissions"
+    message: str = Field(min_length=10, max_length=1000)
+    consent: bool
+    session_id: str | None = Field(default=None, max_length=80)
+
+    @field_validator("name", "message")
+    @classmethod
+    def _strip(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("must not be empty")
+        return value
+
+    @field_validator("contact")
+    @classmethod
+    def _email_or_phone(cls, value: str) -> str:
+        value = value.strip()
+        if not (_EMAIL_RE.match(value) or (_PHONE_RE.match(value) and len(re.sub(r"\D", "", value)) >= 7)):
+            raise ValueError("enter a valid email address or phone number")
+        return value
+
+    @field_validator("consent")
+    @classmethod
+    def _must_consent(cls, value: bool) -> bool:
+        if not value:
+            raise ValueError("consent is required so the university may contact you")
+        return value
+
+
+class EnquiryReceipt(BaseModel):
+    id: str
+    received: bool = True

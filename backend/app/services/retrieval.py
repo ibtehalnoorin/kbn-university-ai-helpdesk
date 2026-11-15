@@ -240,6 +240,19 @@ class RetrievalService:
                 if source.file in self._documents
             }
 
+    def catalogue_documents(self) -> dict[str, str]:
+        """The official programme catalogue (the /courses page), which lists every faculty and course.
+
+        Catalogue answers read this page directly: the retrieved chunks for "which faculties?" are
+        now individual faculty pages, and none of them holds the full list.
+        """
+        with self._lock:
+            return {
+                name: self._documents[name]
+                for name, info in self._source_files.items()
+                if name in self._documents and str(info.get("url") or "").rstrip("/").endswith("/courses")
+            }
+
     @property
     def allowed_urls(self) -> set[str]:
         return set(self._allowed_urls)
@@ -267,7 +280,10 @@ class RetrievalService:
                 "collection": self.settings.collection_name,
                 "indexed_chunks": count,
                 "expected_chunks": self.settings.expected_indexed_chunks,
-                "matches_expected": count == self.settings.expected_indexed_chunks,
+                "matches_expected": (
+                    self.settings.expected_indexed_chunks is None
+                    or count == self.settings.expected_indexed_chunks
+                ),
                 "embedding_model": self.settings.embedding_model,
             }
 

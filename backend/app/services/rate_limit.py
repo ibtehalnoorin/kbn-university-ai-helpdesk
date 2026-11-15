@@ -113,6 +113,26 @@ class SharedWindowLimiter:
         return max(1, math.ceil(self.window - (now % self.window)))
 
 
+def check_limits(pairs, now: float | None = None) -> int | None:
+    """Check several ``(limiter, key)`` pairs; return seconds to wait if any blocks, else None.
+
+    When the limiters share one Postgres store the counters are bumped in a single round trip.
+    """
+    now = time.time() if now is None else now
+    shared = [lim for lim, _ in pairs if isinstance(lim, SharedWindowLimiter)]
+    if len(shared) == len(pairs) and len({id(lim.store) for lim in shared}) == 1 and hasattr(shared[0].store, "incr_counters"):
+        items = [
+            (f"{lim.name}:{key}", int(now // lim.window), int(lim.window * 2), 1) for lim, key in pairs
+        ]
+        used = shared[0].store.incr_counters(items)
+        waits = [lim.retry_after(key, now) for (lim, key), n in zip(pairs, used) if n > lim.limit]
+        return max(waits) if waits else None
+    for limiter, key in pairs:
+        if not limiter.allow(key, now):
+            return limiter.retry_after(key, now)
+    return None
+
+
 class SharedDailyBudget:
     """Daily LLM budget (overall and per client key) shared by every server instance."""
 
@@ -131,8 +151,15 @@ class SharedDailyBudget:
         limits = {"budget:all": self.max_calls}
         if key is not None and self.per_key_max is not None:
             limits[f"budget:key:{key}"] = self.per_key_max
+        names = self._keys(key)
+        if hasattr(self.store, "incr_counters"):  # one round trip for all counters
+            used = self.store.incr_counters([(n, day, self.TTL, 1) for n in names])
+            if any(u > limits[n] for n, u in zip(names, used)):
+                self.store.incr_counters([(n, day, self.TTL, -1) for n in names])
+                return False
+            return True
         taken: list[str] = []
-        for name in self._keys(key):
+        for name in names:
             taken.append(name)
             if self.store.incr_counter(name, day, self.TTL) > limits[name]:
                 for undo in taken:  # over the cap: put back everything this call added
@@ -142,7 +169,11 @@ class SharedDailyBudget:
 
     def refund(self, key: str | None = None, now: float | None = None) -> None:
         day = int((time.time() if now is None else now) // 86400)
-        for name in self._keys(key):
+        names = self._keys(key)
+        if hasattr(self.store, "incr_counters"):
+            self.store.incr_counters([(n, day, self.TTL, -1) for n in names])
+            return
+        for name in names:
             self.store.incr_counter(name, day, self.TTL, amount=-1)
 
 

@@ -47,6 +47,7 @@ class SessionStore:
         self.max_sessions = max_sessions
         self.max_messages = max_messages
         self._sessions: dict[str, SessionRecord] = {}
+        self._enquiries: dict[str, dict] = {}
         self._lock = threading.RLock()
         self._load()
 
@@ -59,6 +60,8 @@ class SessionStore:
             for raw in payload.get("sessions", []):
                 record = SessionRecord.model_validate(raw)
                 self._sessions[record.id] = record
+            for raw in payload.get("enquiries", []):
+                self._enquiries[raw["id"]] = raw
             logger.info("Loaded %s session(s) from %s", len(self._sessions), self.path)
         except Exception as exc:
             logger.warning("Could not load session store %s: %s", self.path, exc)
@@ -76,6 +79,7 @@ class SessionStore:
                 "version": 1,
                 "saved_at": _now().isoformat(),
                 "sessions": [record.model_dump(mode="json") for record in self._sessions.values()],
+                "enquiries": list(self._enquiries.values()),
             }
             temp = self.path.with_suffix(f"{self.path.suffix}.tmp")
             temp.write_text(
@@ -217,6 +221,41 @@ class SessionStore:
             if stale:
                 self._save()
             return len(stale)
+
+    # ------------------------------------------------------------------ enquiries
+    def create_enquiry(self, name: str, contact: str, topic: str, message: str, session_id: str | None = None) -> dict:
+        with self._lock:
+            row = {
+                "id": f"enq_{uuid.uuid4().hex[:12]}",
+                "created_at": _now().isoformat(),
+                "status": "new",
+                "name": name,
+                "contact": contact,
+                "topic": topic,
+                "message": message,
+                "session_id": session_id,
+            }
+            self._enquiries[row["id"]] = row
+            self._save()
+            return dict(row)
+
+    def list_enquiries(self, status: str | None = None, limit: int = 200) -> list[dict]:
+        with self._lock:
+            rows = [dict(r) for r in self._enquiries.values() if status is None or r["status"] == status]
+        return sorted(rows, key=lambda r: r["created_at"], reverse=True)[:limit]
+
+    def purge_enquiries_older_than(self, days: int) -> int:
+        cutoff = (_now() - timedelta(days=days)).isoformat()
+        with self._lock:
+            stale = [i for i, r in self._enquiries.items() if r["created_at"] < cutoff]
+            for i in stale:
+                del self._enquiries[i]
+            if stale:
+                self._save()
+            return len(stale)
+
+    def _enquiries_by_id(self) -> dict[str, dict]:  # test hook
+        return self._enquiries
 
     def health(self) -> dict:
         return {"status": "ok", "kind": "json", "sessions": self.count()}

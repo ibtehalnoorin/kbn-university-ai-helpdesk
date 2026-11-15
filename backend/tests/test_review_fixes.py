@@ -285,3 +285,42 @@ def test_budget_calls_do_not_block_the_event_loop():
 
     asyncio.run(run())
     assert len(ticks) == 8 and ticks[-1] - ticks[0] < 0.6  # the loop kept ticking during the 0.4 s call
+
+
+# ---- knowledge-base expansion: catalogue answers must not depend on what retrieval happens to return ----
+COURSES_PAGE = (
+    "# Source: https://www.kbn.university/courses\n\n###### Details of Academic Programs\nUG Courses\n"
+    "##### Faculty of Medical Sciences\nMBBS\n##### Faculty of Law\nLL.B\n##### Faculty of Education\nB.Ed\n"
+)
+
+
+def test_faculty_list_comes_from_the_official_courses_page_even_if_retrieval_returns_other_pages(tmp_path, monkeypatch):
+    class Retrieval(FakeRetrieval):
+        def documents_for(self, sources):
+            return {"site_faculty-of-law.md": "# Faculty of Law\nLL.B and B.A. LL.B programmes."}  # no full list here
+
+        def catalogue_documents(self):
+            return {"site_courses.md": COURSES_PAGE}
+
+    monkeypatch.setattr(main_module, "RetrievalService", Retrieval)
+    monkeypatch.setattr(main_module, "WorkerClient", FakeWorker)
+    settings = Settings(start_worker=False, session_store_path=str(tmp_path / "s.json"), trusted_proxy_hops=0)
+    with TestClient(main_module.create_app(settings)) as client:
+        sid = client.post("/sessions", json={}, headers=CLIENT).json()["id"]
+        body = client.post("/chat", json={"session_id": sid, "message": "Which faculties and departments does KBN University have?"}, headers=CLIENT).json()
+    assert body["fast_path"] == "faculties"
+    assert "Faculty of Medical Sciences" in body["assistant_message"]["content"]
+    assert "Faculty of Law" in body["assistant_message"]["content"]
+
+
+def test_retrieval_exposes_the_courses_page_as_the_catalogue(tmp_path, monkeypatch):
+    from app.services.retrieval import RetrievalService
+
+    docs = tmp_path / "knowledge_docs"
+    docs.mkdir()
+    (docs / "site_courses.md").write_text("# Source: https://www.kbn.university/courses\n\nUG Courses\n", encoding="utf-8")
+    (docs / "site_mbbs.md").write_text("# Source: https://www.kbn.university/mbbs\n\nMBBS details\n", encoding="utf-8")
+    service = RetrievalService(Settings(start_worker=False))
+    monkeypatch.setattr(Settings, "knowledge_docs_path", property(lambda self: docs))  # point at the temp docs
+    service._load_source_metadata()
+    assert list(service.catalogue_documents()) == ["site_courses.md"]

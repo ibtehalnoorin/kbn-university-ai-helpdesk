@@ -21,7 +21,7 @@ jobs:
           POSTGRES_DB: kbn_test
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U kbn" --health-interval 5s --health-timeout 5s --health-retries 10
+          --health-cmd "pg_isready -U kbn -d kbn_test" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       PYTHONPATH: .:backend
       TEST_DATABASE_URL: postgresql://kbn:kbn@localhost:5432/kbn_test

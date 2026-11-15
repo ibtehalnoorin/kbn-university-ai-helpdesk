@@ -1,0 +1,690 @@
+# Source: https://www.kbn.university/medicine-teaching
+
+# FACULTY OF MEDICINE
+# Teaching Staff
+[ANATOMY](https://www.kbn.university/medicine-teaching#anchor1)
+[PHARMACOLOGY](https://www.kbn.university/medicine-teaching#anchor5)
+[GENERAL MEDICINE](https://www.kbn.university/medicine-teaching#anchor9)
+[PSYCHIATRY](https://www.kbn.university/medicine-teaching#anchor13)
+[ENT](https://www.kbn.university/medicine-teaching#anchor17)
+[COMMUNITY MEDICINE](https://www.kbn.university/medicine-teaching#anchor2)
+[FORENSIC MEDICINE](https://www.kbn.university/medicine-teaching#anchor6)
+[ORTHOPADIC](https://www.kbn.university/medicine-teaching#anchor10)
+[PEDIATRICS](https://www.kbn.university/medicine-teaching#anchor14)
+[DENTAL](https://www.kbn.university/medicine-teaching#anchor18)
+[BIOCHEMISTRY](https://www.kbn.university/medicine-teaching#anchor3)
+[PHYSIOLOGY](https://www.kbn.university/medicine-teaching#anchor7)
+[OPTHOLMOLOGY](https://www.kbn.university/medicine-teaching#anchor11)
+[GENERAL SURGERY](https://www.kbn.university/medicine-teaching#anchor15)
+[SKIN & VD](https://www.kbn.university/medicine-teaching#anchor19)
+[PATHOLOGY](https://www.kbn.university/medicine-teaching#anchor4)
+[MICROBIOLOGY](https://www.kbn.university/medicine-teaching#anchor8)
+[RADIOLOGY](https://www.kbn.university/medicine-teaching#anchor12)
+[OBG](https://www.kbn.university/medicine-teaching#anchor16)
+[ANAESTHESIOLOGY](https://www.kbn.university/medicine-teaching#anchor20)
+[TB & CHEST](https://www.kbn.university/medicine-teaching#anchor21)
+##### DEAN, FACULTY OF MEDICINE
+## DR. MOHAMMAD MOINUDDIN
+07-01-1955
+MBBS, M.S Gen. Surgery
+Professor
+Specialization
+General Surgery
+Total experience - 25
+Research Output - 03
+Anchor 1
+###### DEPARTMENT OF ANATOMY
+## DR.PRADEEP. K. MURUDKAR
+14.10.1953
+MD ANATOMY
+Prof & HOD
+ANATOMY
+Total experience - 36
+Research Output - 06
+## DR.SYED NAZEER AHMED
+11.08.1978
+Asso.Prof.
+Total experience - 09
+## DR. MOHAMMED KHALEEL AHMED
+12.05.1985
+Asst.Prof
+Total experience - 04
+Research Output - 08
+## DR. GAZALA SHAIREEN
+##
+01.04.1971
+MBBS
+Tutor
+---
+Total experience - 02
+Research Output - 01
+## MR.SYED KHAJA WAHEEDUDDIN
+20.07.1989
+M.Sc Anatomy
+Total experience - 05
+Research Output - --
+Anchor 2
+###### DEPARTMENT OF COMMUNITY MEDICINE
+## DR. N.D.BENDIGERI
+22-05-1950
+MBBS,.MD
+PROF.& HOD
+Community Medicine
+Total experience - 39
+## DR. KAVIRAJ
+25-05-1983
+ASSO. PROF
+Total experience - 06
+Research Output - 09
+## DR. MOHD. ABDUL BASEER
+26-06-1984
+MBBS, MD
+## DR. SHAHNAZ SHAHEEN
+20-07-1984
+ASST. PROF
+## DR.SARSWATI V. SAJJANSHATTI
+02-11-1989
+Total experience - 01
+## DR.M.A.FEEHEM
+05-08-1986
+## DR. NIMRA SHIREEN
+22-06-1988
+Research Output - 07
+## DR. K. VIJAYA LAKSHMI
+28-04-1956
+TUTOR
+Total experience - 16
+## DR. SMITA NOOLA
+08-12-1971
+Total experience - 03
+Anchor 3
+###### DEPARTMENT OF BIOCHEMISTRY
+## DR. MIRZA SHARIF AHMED BAIG
+07-04-1979
+MBBS., MD
+PROF. & HOD
+Biochemistry
+Total experience - 10
+Research Output - 05
+## DR. NAGRAJ R SHETRAR
+14-11-1983
+## DR. SABA NAZNEEN KHAN
+23-06-1986
+Total experience - 07
+Research Output - 02
+## DR. SADANANDJALI
+03-05-1986
+## DR. HAFSA
+29-11-1987
+## DR. SUMMAYA FIRDOUS
+03-05-1991
+Anchor 4
+###### DEPARTMENT OF PATHOLOGY
+## DR. ZEENATH BEGUM
+25-07-1976
+MBBS.MD
+Pathology
+Research Output - 12
+## DR. PRATIMA S
+19-12-1955
+MBBS DCP MD
+Prof
+Total experience - 35
+## DR MANDAKINI B.T
+14-07-1961
+Total experience - 15
+## DR. MOHD IRSHAD AHMED
+24-04-1969
+Associate Prof
+Total experience - 18
+Research Output - 04
+## DR. SHILPA V UPLAONKAR
+11-05-1981
+MBBS MD
+## DR. KUMARI JYOTHI
+13-11-1987
+Assistant Prof
+## DR. AYESHA FATIMA
+24-01-1989
+## DR. MD IBRAHIM SIDDIQUI
+26-11-1988
+## DR.SYEDA HEENA KAUSER
+10-11-1983
+## DR. SAARA NEEHA
+## DR. UZMA ALVI
+14-09-1988
+## DR. SHAIK GAFFAR IQBAL
+02-05-1955
+## DR. NAJMUSSAHER KUDCHI
+05-06-1991
+## DR.LALITA REDDY
+20-08-1991
+## DR. AYESHA ANJUM
+31-07-1988
+## DR. KEERTANA
+27-08-1993
+Anchor 5
+###### DEPARTMENT OF PHARMACOLOGY
+## DR.P. G. KALSHETTY
+20-06-1951
+MBBS.,MD
+Pharmacology
+## DR. S. H. VARDHAMANE
+10-08-1956
+## DR. MOHAMMED MOHSIN AHMED
+01-06-1985
+Asso. Prof
+Total experience - 08
+## DR. ZAINAB GHAZALA
+18-10-1986
+Asst. Prof
+## DR. SUHSMA D.S
+20-02-1985
+## DR. SHIREEN RANA
+23-09-1983
+M.Sc.Ph D
+## DR. KASIF AHAMMED
+20-05-1988
+M.Sc.in Pharmacology
+## DR. AMREEN SABA
+10-05-1990
+Anchor 6
+###### DEPARTMENT OF FORENSIC MEDICINE
+## DR S.K.GOLI
+26-03-1950
+Prof. & HOD
+Forensic Medicine
+Total experience - 41
+Research Output - 17
+## DR. SUNIL KUMAR C.A.
+10-07-1986
+## DR. ABDUL RAHEEMAN IDAGA
+06-08-1969
+## DR. SADIYA AFREEN
+24-06-1988
+Anchor 7
+###### DEPARTMENT OF PHYSIOLOGY
+## DR IMTIAZ ALI
+11-06-1975
+MBBS,MD
+Asso. Professor
+Physiology
+## DR SAHER ANSARI
+04-06-1973
+Total experience - 11
+Research Output - 10
+## DR B S MALI PATIL
+12-07-1953
+## DR SWATI JANGAM
+10-06-1972
+## DR NADERA YASMEEN
+06-10-1971
+## DR SHILPA N
+15-06-1982
+## DR ARSHIYA ZEBA
+20-07-1990
+## DR IRSHAD DAWOOD BENDIGERI
+03-07-1955
+Total experience - 19
+## DR BASERA JABEEN
+20-04-1963
+Anchor 8
+###### DEPARTMENT OF MICROBIOLOGY
+## DR. S.B. SIDDESH
+11-10-1975
+MD MICRO
+Microbiology
+Total experience - 21
+Research Output - 20
+## DR. BILAL AHMAD MIR
+02-05-1984
+Ph.D Medical Micro
+Associate Professor
+## DR. JAVERIA FIRDOUS
+26-07-1989
+Assistant professor
+## MR. MOHD SHAHID
+10-07-1983
+M.Sc Medical Microbiology
+## DR. ARISHIYA TANZEEN
+30-09-1986
+## DR. MEHRUNISSA INDIKAR
+03-09-1981
+Anchor 9
+###### DEPARTMENT OF GENERAL MEDICINE
+## DR. SHIVARAJ ALASHETTY
+2-1-1950
+Prof &HOD
+Gen. Medicine
+Total experience - 33
+## DR. SATISH LAHOTI
+20-12-1955
+Total experience - 28
+## DR. JAGANNATH BIJAPURE
+27-10-1955
+Total experience - 29
+## DR. VISHWANATH
+27-5-1952
+## DR. VIJAYAMOHAN
+4-9-1954
+Total experience - 17
+## DR. LINGARAJ LATURE
+08-10-1955
+## DR. CHANDRAKALA
+15-8-1976
+Total experience - 13
+## DR. ANAND SHANKAR
+17-3-1976
+## DR. SHARANGOUDA PATIL
+21-10-1977
+MBBS,MD, DM (Neuro)
+## DR. VEERAJ KALBURGI
+31-3-1976
+MBBS,MD, DNB,(Cardio)
+## DR. PRASHANT E. D.
+30-11-1981
+## DR. GIRISH S. RONAD
+24-2-1985
+## DR. RENUPRASAD
+27-12-1988
+## DR. MD. MUDASSIR
+8-11-1988
+S. R.
+Total experience - --
+## DR. SHAGUFTA SHIREEN
+31-5-1982
+## DR. MD. FAROOQ ALI
+11-11-1952
+## DR. MOHAMMED RUSTOM
+08-09-1950
+## DR. VIJAY M. SHAH
+21-06-1956
+## DR. SALMAN PATEL
+12-12-1986
+## DR. AVINASH U. JADHAV
+04-03-1989
+J. R.
+## DR. VIRUPAXI M. BADIGER
+22-07-1976
+## DR. VINAY DURGAD
+02-02-1989
+## DR. SHRUTHI H.
+09-01-1993
+## DR. MD. FAZIL
+09-08-1990
+## DR. ADNAN IMAM
+17-08-1986
+## DR. SUPRIYA YADAV
+12-01-1994
+## DR. RAVI KUMAR
+28-11-1994
+## DR. SYED WASEEM KHADRI
+10-08-1994
+## DR. CHETAN
+04-09-1993
+Anchor 10
+###### DEPARTMENT OF ORTHOPAEDIC
+## DR . SACHIN SHAH
+03-06-1964
+MS ORTHO
+Orthopaedic
+## DR . M. A. Q. ANSARI
+26-05-1978
+MS Ortho
+Total experience - 12
+## DR. MOHAMMAD ASIMUDDIN
+14-11-1979
+## DR. MARTHAND KULKARNI
+D Ortho, DNB Ortho
+Assistant Professor
+## DR. PRADEEP KUMAR NATIKAR
+28-12-1985
+Ms Ortho
+## DR. GIRISH KERI
+10-08-1978
+D Ortho, Dnb Ortho
+## DR. S JIDGEKAR
+02-10-1954
+D Ortho
+Senior Resident
+## DR. ARUNKUMAR KULKARNI
+16-11-1955
+Total experience - 30
+## DR. PRASHANT SHAH
+11-06-1982
+## DR.NAFISUR REHMAN SHAIKH
+10-06-1988
+Junior Resident
+## DR.NOMAN IBRAHIM ATTAR
+22-07-1989
+## DR.LOHITH.N
+10-12-1989
+## DR.MUJTABA HUSSAIN PATEL
+05-08-1990
+## DR. AMBREEN FATIMA
+01-07-1992
+## DR. AMAAN MAHAJABEEN
+09-05-1991
+Anchor 11
+###### DEPARTMENT OF OPTHOLMOLOGY
+## DR. PRANESH KULKARNI
+14-08-1955
+MBBS ,MS,DOMS
+General Ophthalmology
+## DR. GURURAJ V. WALI
+29-10-1964
+MBBS,MS
+Assoc .Prof
+## DR. ABHISHEK KULKARNI
+27-10-1984
+MBBS,DOMS,DNB
+Cornea
+## DR. SANGEETA .P
+10-09-1982
+MBBS,MS Ophthal
+Asst. prof
+Glaucoma
+## DR.SANA NIZAMI
+31-10-1985
+## DR. SOURABH SHAH
+14-12-1984
+MBBS,DNB
+Retina
+Anchor 12
+###### DEPARTMENT OF RADIOLOGY
+## Dr. S. C. DESAI
+07-06-1950
+M.D
+Professor & HOD
+Radiology
+Total experience - 38
+## Dr. PRADEEP N. DESHMUKH
+07-01-1958
+Total experience - 14
+## Dr. ROOPA K. TANDUR
+26-10-1985
+Asso. Prof.
+## Dr. KIRAN S. DESAI
+26-08-1985
+Asst. Prof.
+## Dr. SHIVANI SHARMA
+10-07-1987
+## Dr. REVANSIDDAPPA KALYANI
+17-06-1981
+D.N.B
+## Dr. SRIPAD PRABHAKAR K.
+01-02-1976
+D.M.R.D.
+Senior Resi.
+## Dr. SHIVANGOUDA S. PATIL
+27-06-1972
+## Dr. SYED AHSAN QUADRI
+30-11-1977
+## Dr. SAMREEN FATHIMA
+08-06-1987
+Senior Resi
+## Dr. JYOTHISH K. PADMANABHAN
+10-12-1982
+M.B.B.S.
+Junior Resi.
+## Dr. CHETAN BHARATSING PATIL
+24-11-1985
+## Dr. MANISH CHAUDHARY
+18-06-1991
+## Dr. AIMAN SAIMA
+21-12-1992
+## Dr. H. M. CHAKIT KUMAR
+24-06-1992
+Anchor 13
+###### DEPARTMENT OF PSYCHIATRY
+## DR. AMOL PATANGE
+13.07.1979
+Psychiatry
+## DR. MD MUNNAWAR S. HUSSAIN
+08.04.1986
+## DR. BASAVARAJ
+05-05-1947
+S.R.
+Anchor 14
+###### DEPARTMENT OF PEDIATRICS
+## DR. SIDDALING CHENGTY
+07-03-1971
+M.D. Pediatrics
+Pediatrics
+## DR.ANUROOP SHAH
+20-10-1969
+## DR.DINKAR MORE
+08-01-1962
+## DR. V.G. MUJUMDAR
+01-08-1958
+Research Output - 11
+## DR. VINOD UPLAONKAR
+01-05-1978
+## DR. PREETI AMARKHED
+21-10-1980
+## DR. CHARANRAJ HONNALLI
+20-02-1987
+D.M.(Neonatology)
+## DR. V.G.MANTRI
+11-11-1971
+D.C.H.
+Sr. Resident
+## DR. SUNIL REVANKAR
+10-01-1961
+## DR. AVINASH PATIL.
+14-05-1954
+D.C.H
+## DR. ARUN KUMAR. TELLUR
+29-05-1969
+## DR. SACHIN HATTI
+20-11-1989
+## DR. MOHD. MUZZAMIL
+27-01-1991
+Jr Resident
+## DR. L KHAJA GAREEBAN NAWAZ
+04-06-1983
+## DR RUMANA SULTANA
+28-02-1991
+## DR. BAPURAO S.KANTTI
+25-07-1991
+## DR. HEBA ABDUL JABBAR
+26-11-1989
+## DR. SHOEB UR RAHMAN
+10-07-1989
+Anchor 15
+###### DEPARTMENT OF GENERAL SURGERY
+## DR. RAVINDRA G DEVANI
+20-10-1954
+## DR. MALLIKARJUN V NISTY
+28-09-1953
+## DR. GIRISH NOOLA
+02-07-1971
+## DR. SADASHIV PATIL
+15-10-1966
+Total experience - 20
+## DR. MOHAMMED ABDUL BASEER
+02-02-1980
+MBBS, DNB Gen. Surgery
+## DR.NANDKISHOR SHINDE
+06-06-1980
+MBBS, DNB Gen. Surgery,
+Paediatric Surgery
+## DR.SAGAR S KATHARE
+16-05-1988
+Senior resident
+## DR.SUNIL KALASKAR
+07-06-1970
+## DR. KISHOR MANKAR
+24-03-1959
+## DR.SANTOSH MANGSHETTY
+29-05-1978
+MBBS, M.S Gen. Surgery,
+Asst Prof
+Neurosurgery
+## DR. SHARANABASAPPA HATTI
+10-10-1976
+## DR.BASVANTH PATIL
+21-06-1967
+Asso Prof
+## DR. TAHIR MPVR
+06-05-1985
+Junior resident
+## DR ANM OWAIS DANISH
+21-04-1991
+## DR. MEDIDE VEERENDRA
+13-07-1990
+## DR. ASHFAQ AHMED
+15-02-1991
+## DR. ABU HASIM ABDUL AZIZ
+14-12-1987
+## DR. VIKASH KUMAR
+28-07-1989
+Anchor 16
+###### DEPARTMENT OF OBG
+## DR.RAJSHREE PALADI
+19-12-1966
+MD
+OBG
+Total experience - 23
+## DR.SUJATA R DHADED
+25-03-1959
+MD (DGO)
+## DR.SHILPA MODI
+24-10-1973
+MS
+## DR.SHAILAJA KOTNUR
+07-06-1972
+## DR.JAYALAXMI
+28-09-1975
+## DR.MEHVISH ANJUM
+03-11-1982
+## DR.NIVEDITA DONGAPURE
+08-01-1974
+DNB
+## DR.AISHA HUMERA
+11-07-1982
+## DR.FATIMA MOINUDDIN
+02-05-1961
+DGO
+SR
+## DR.SHANTA CHENGTY
+17-07-1971
+## DR.SOUMYA JOSHI
+31-07-1981
+DGO,DNB
+## DR.RASHEEDA FATIMA
+05-02-1955
+JR
+## DR.SOUMYA KRISHNA
+04-10-1990
+## DR.UZMA RANI
+01-06-1989
+## DR.SHASHANK
+16-11-1991
+Anchor 17
+###### DEPARTMENT OF ENT
+## DR. SANJEEV C. TADASADMATH
+01-01-1970
+MS.ENT
+OTO Laryngologist
+Total experience - 22
+## DR. RAJEEV REDDY
+16-05-1975
+## DR. RATKAL KEDARNATH
+08-04-1974
+## DR. SAYED MUSHTAQ
+03-01-1960
+## DR. DEEPIKARANI PATIL
+24-06-1989
+## DR.PADMA TALIKOTI
+07-05-1984
+Anchor 18
+###### DEPARTMENT OF DENTAL
+## DR. MOHAMMAD ALI R PATEL
+16-06-1984
+MDS
+Oral & Maxillofacial Surgery
+## DR. MOHD VIQUAR AHMED
+27-07-1980
+## DR. ASMA TABASSUM
+12-11-1978
+BDS
+Dentistry
+## DR. MOHAMMED HABEEB AHMED
+15-08-1980
+12-05-1984
+Anchor 19
+###### DEPARTMENT OF SKIN & VD
+## DR. GURUPRASAD K.Y.
+26-06-1970
+M.D., D.N.B.
+SKIN & VD
+## DR. K. DEVENDRAPPA
+07-03-1951
+M.D.
+Assoc. Prof.
+## DR. RAJESHWARI M. NAIK
+14-07-1989
+## DR. MOHAMMED WASEEM JAVED
+28-11-1988
+## DR. SHRUTI C. MATH
+24-08-1991
+MBBS (MD)
+## DR. ALLABAKSH
+13-10-1987
+Anchor 20
+###### DEPARTMENT OF ANAESTHESIOLOGY
+## DR. MILIND S HATWALNE
+26-07-1964
+MBBS, MD Anaethesiology
+Anaesthesiology
+## DR MANZAR HASSAN
+18-08-1950
+## DR LATA D SHETTY
+12-04-1978
+MBBS, DNB
+## DR MD ABID ALI
+17-10-1953
+## DR MEHTA ASHIT SUBHASH
+26-11-1966
+## DR SARDA SUDEEP VISHNUDAS
+03-09-1965
+## DR TEJASHWINI B
+16-10-1983
+## DR IRFAN WARIS
+14-04-1983
+## DR FURQUAN INAMDAR
+08-05-1989
+## DR MIRZA AFZAL BAIG
+05-05-1967
+## DR SHARDA B M
+08-05-1966
+MBBS, DA
+## DR TANUJA B PATIL
+11-06-1964
+## DR SAMEER
+01-01-1982
+## DR TANVEER ANJUM
+26-12-1983
+## DR VIJAY KUMAR
+01-04-1989
+## DR ANKITA HAZARE
+14-08-1991
+## DR HIMAYATHULLAH HUSSAINI
+04-02-1991
+## DR MD ABDUL WAJID
+22-05-1985
+## DR SNEHA S RATHOD
+24-07-1989
+## DR BAGYASHREE BAGODI
+30-07-1993
+Anchor 21
+###### DEPARTMENT OF TB & CHEST
+## DR. AGAM VORA
+14-07-1978
+TB & Chest
+## DR. GOUSEDDIN ARIF
+18-07-1978
+## DR. VIDYA SAGAR
+21-04-1950
+[>](https://www.kbn.university/medicine-teaching)

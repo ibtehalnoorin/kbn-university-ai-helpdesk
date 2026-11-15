@@ -138,3 +138,41 @@ def test_llm_budget_holds_across_two_app_instances(two_instances):
         second = b.post("/chat", json={"session_id": sid, "message": "What is 3 + 3?"}, headers=CLIENT)
     assert first.status_code == 200
     assert second.status_code == 503 and second.json()["error"]["code"] == "daily_limit_reached"
+
+
+class BatchingStore(FakeCounterStore):
+    """Counts how many times the (remote) store is called."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.calls = 0
+
+    def incr_counter(self, key, bucket, ttl_seconds, amount=1):
+        self.calls += 1
+        return super().incr_counter(key, bucket, ttl_seconds, amount)
+
+    def incr_counters(self, items):
+        self.calls += 1
+        return [FakeCounterStore.incr_counter(self, k, b, t, a) for k, b, t, a in items]
+
+
+def test_both_rate_limits_are_checked_in_one_store_call():
+    from app.services.rate_limit import check_limits
+
+    store = BatchingStore()
+    per_ip = SharedWindowLimiter(store, limit=100, window_seconds=60, name="chat-ip")
+    per_visitor = SharedWindowLimiter(store, limit=2, window_seconds=60, name="chat")
+    assert check_limits([(per_ip, "1.2.3.4"), (per_visitor, "v1")], now=1000) is None
+    assert check_limits([(per_ip, "1.2.3.4"), (per_visitor, "v1")], now=1001) is None
+    assert store.calls == 2  # one call per request, not one per limiter
+    retry = check_limits([(per_ip, "1.2.3.4"), (per_visitor, "v1")], now=1002)
+    assert retry is not None and 1 <= retry <= 60  # the visitor limit blocked it
+    assert check_limits([(per_ip, "1.2.3.4"), (per_visitor, "v2")], now=1003) is None  # other visitor fine
+
+
+def test_budget_takes_one_store_call_and_undoes_in_one_call():
+    store = BatchingStore()
+    budget = SharedDailyBudget(store, max_calls=1, per_key_max=5)
+    assert budget.try_consume(1000, key="ip") and store.calls == 1
+    assert not budget.try_consume(1000, key="ip") and store.calls == 3  # consume + undo
+    assert budget.try_consume(1000 + 86400, key="ip")  # new day, counters were not left inflated
