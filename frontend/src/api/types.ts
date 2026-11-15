@@ -112,7 +112,7 @@ export interface HealthResponse {
     };
     chromadb: ComponentStatus & {
       indexed_chunks?: number;
-      expected_chunks?: number;
+      expected_chunks?: number | null;
       collection?: string;
     };
     grounding: ComponentStatus & {

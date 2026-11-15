@@ -217,3 +217,22 @@ def test_dispatcher_rejects_a_mismatched_echoed_session(settings) -> None:
     stop.set()
     result_queue.put(None)
     thread.join(timeout=2)
+
+
+def test_chunk_count_is_not_pinned_to_a_fixed_number():
+    # The knowledge base grows when the site is re-crawled; the health check must not flag that.
+    from types import SimpleNamespace
+
+    from app.config import Settings
+    from app.services.retrieval import RetrievalService
+
+    def health_for(expected):
+        service = RetrievalService(Settings(start_worker=False, expected_indexed_chunks=expected))
+        service._kb = SimpleNamespace(collection=SimpleNamespace(count=lambda: 848))
+        service._initialized = True
+        return service.health()
+
+    assert Settings(start_worker=False).expected_indexed_chunks is None
+    assert health_for(None)["matches_expected"] is True
+    assert health_for(848)["matches_expected"] is True
+    assert health_for(38)["matches_expected"] is False  # an explicit expectation is still honoured

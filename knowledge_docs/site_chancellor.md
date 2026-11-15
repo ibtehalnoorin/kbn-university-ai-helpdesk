@@ -1,0 +1,14 @@
+# Source: https://www.kbn.university/chancellor
+
+### THE CHANCELLOR
+### Dr. Syed Muhammad Ali Al Hussaini
+### The Chancellor
+### Khaja Bandanawaz University
+Dr. Syed Muhammad Ali al-Hussaini has had an early initiation in the service of education, having been exposed to the dedicated work of his father and grandfather. Calm and soft-spoken, Dr. Muhammad Ali al-Hussaini is a keen observer and an un-tiring worker.
+An Alumni of Khaja Education Society's Sayyid Akbar Husayni ICSE School, he went on to earn his Master of Arts in Arabic from Osmania University Hyderabad and later an additional Post Graduation Degree in Islamic Studies from McGill University, Montreal.
+He has been closely associated with the administration of the Khaja Education Society and all its institutions. Determined and practical in his approach, Dr. Ali al-Hussaini looks forward to the further development and progress of the Khaja Education Society, development that is aligned with the traditions of culture and continuity and at the same time forward looking. He is a keen sportsman and particularly interested in Cricket and the promotion of this game in the region. Consequently, he has brought team games to the fore through the KBN House of Sports.
+Dr. Muhammad Ali al-Hussaini is well-versed in the Arabic language and literature. With a flair for the Arts, music as well as modern technology, he is well-equipped to introduce fresh perspectives in the future vision of the Khaja Education Society. Notably, he has previously served as the Pro Chancellor of Khaja Bandanawaz University and currently holds the position of Chancellor.
+He takes upon himself multifarious roles in the University in line with the vision of the Firtst Hon'ble Chancellor he spearheads progression and development in all sectors - from sports to IT, planning and construction.
+Increasingly he has shouldered the responsibility of developing the sprawling University Campus and infrastructure. This is an extremely large job that Syed Ali Al Hussaini oversees. Spread across various areas, the 37 acre campus contains two large professional colleges and multifarous institutions. The Khaja Bandanawaz Teaching & General Hospital is a 6 storeyed building with extensions. Janab Ali al Hussaini is particularly interested in the development of this Hospital aiming to make it a State of the Art institution with the best facilities for health care. His passion and deep interest lies also in Sports and the development of the 14 acre Sports ground with the finest Cricket pitches and a top class stadium. Adjacent to the sports ground is the KBN Riding Club, another focus of his keen interest. He not only works towards the development of the Campus but also in its development and progress.
+Steered by his dynamic enthusiasm, the KBN University shall very soon have one of the most beautiful Structure and Campus in the Country.
+[>](https://www.kbn.university/chancellor)

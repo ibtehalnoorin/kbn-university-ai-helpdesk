@@ -215,4 +215,5 @@ def test_built_frontend_is_served_when_present(client) -> None:
         return
     response = client.get("/")
     assert response.status_code == 200
-    assert "KBN University AI Helpdesk" in response.text
+    assert "KBN University Helpdesk" in response.text  # branded page title
+    assert "Khaja Bandanawaz University" in response.text

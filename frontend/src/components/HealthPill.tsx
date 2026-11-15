@@ -65,11 +65,11 @@ export function HealthPill({
         <config.Icon className="h-3.5 w-3.5" aria-hidden="true" />
         {config.label}
       </span>
-      {typeof chunks === "number" && typeof expected === "number" ? (
+      {typeof chunks === "number" ? (
         <span className="pl-4 text-[0.62rem] font-normal text-stone-500">
-          {chunks === expected
-            ? `${chunks} indexed KBN records · verified`
-            : `${chunks}/${expected} records indexed`}
+          {typeof expected === "number" && chunks !== expected
+            ? `${chunks}/${expected} records indexed`
+            : `${chunks} indexed KBN records · verified`}
         </span>
       ) : null}
     </div>

@@ -58,7 +58,8 @@ class Settings(BaseSettings):
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     chroma_dir: str = "./local_vector_kb"
     collection_name: str = "local_research_kb"
-    expected_indexed_chunks: int = 38
+    # None = do not pin the index size (it grows when the site is re-crawled).
+    expected_indexed_chunks: int | None = None
 
     # Runtime-only generation options injected by worker_entry.py. Keeping them
     # here leaves processor.py byte-identical and makes them easy to tune.

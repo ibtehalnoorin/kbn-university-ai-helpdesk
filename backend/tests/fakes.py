@@ -51,6 +51,9 @@ class FakeRetrieval:
     def documents_for(self, sources) -> dict[str, str]:
         return {}
 
+    def catalogue_documents(self) -> dict[str, str]:
+        return {}
+
     @property
     def allowed_urls(self) -> set[str]:
         return {"https://www.kbn.university"}

@@ -252,7 +252,7 @@ class ChatService:
                 message,
                 result.context,
                 result.sources,
-                self.retrieval.documents_for(result.sources),
+                {**self.retrieval.catalogue_documents(), **self.retrieval.documents_for(result.sources)},
             )
             if fast is not None:
                 supported, reason = verify_answer(
