@@ -81,7 +81,7 @@ class RetrievalService:
             )
             # Warm the embedding model once so the first user question does not
             # pay the model-load cost. Failures are non-fatal: retrieval will
-            # surface a real error if Ollama is unavailable.
+            # surface a real error if the embedder is unavailable.
             try:
                 self._kb._get_embedding("warmup")
             except Exception as exc:  # pragma: no cover - depends on local Ollama

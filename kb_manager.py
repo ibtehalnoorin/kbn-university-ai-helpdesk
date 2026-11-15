@@ -1,9 +1,8 @@
 import os
 import chromadb
 from chromadb.config import Settings
-import ollama
+import embeddings
 
-EMBEDDING_MODEL = "nomic-embed-text"
 DB_PATH = "./local_vector_kb"
 
 
@@ -14,9 +13,8 @@ class KnowledgeBase:
         self.collection = self.client.get_or_create_collection(name=collection_name)
 
     def _get_embedding(self, text: str) -> list[float]:
-        """Generates vector embeddings using Ollama's nomic-embed-text model."""
-        response = ollama.embeddings(model=EMBEDDING_MODEL, prompt=text)
-        return response["embedding"]
+        """Generates a vector embedding (in-process ONNX by default; see embeddings.py)."""
+        return embeddings.embed(text)
 
     def add_document(self, doc_id: str, text: str, metadata: dict = None):
         """Vectorizes a text document/snippet and stores it in the local vector DB."""

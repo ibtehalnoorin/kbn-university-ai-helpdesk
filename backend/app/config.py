@@ -53,7 +53,8 @@ class Settings(BaseSettings):
     groq_base_url: str = "https://api.groq.com/openai/v1"
     groq_timeout_seconds: float = 30.0
     groq_max_parallel: int = 8
-    embedding_model: str = "nomic-embed-text"
+    embedding_provider: str = "onnx"
+    embedding_model: str = "BAAI/bge-small-en-v1.5"
     chroma_dir: str = "./local_vector_kb"
     collection_name: str = "local_research_kb"
     expected_indexed_chunks: int = 38
