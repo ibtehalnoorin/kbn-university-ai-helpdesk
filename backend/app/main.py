@@ -23,12 +23,30 @@ from app.config import PROJECT_ROOT, Settings, get_settings
 from app.errors import AppError
 from app.logging_config import configure_logging
 from app.services.chat_service import ChatService
+from app.services.rate_limit import DailyBudget, SlidingWindowLimiter
 from app.services.health_service import HealthService
 from app.services.retrieval import RetrievalService
-from app.services.session_store import SessionStore
+from app.services.store_factory import make_store
 from app.services.worker_client import WorkerClient
+from app.services.worker_factory import make_worker
 
 logger = logging.getLogger("kbn.api")
+
+
+async def _purge_once(store, days: int) -> None:
+    try:
+        removed = await asyncio.to_thread(store.purge_older_than, days)
+        if removed:
+            logger.info("Retention purge removed %s session(s) older than %s days", removed, days)
+    except Exception:
+        logger.exception("Retention purge failed")
+
+
+async def _retention_loop(store, days: int) -> None:
+    """Purge old conversations once a day (the first purge runs at startup)."""
+    while True:
+        await asyncio.sleep(24 * 3600)
+        await _purge_once(store, days)
 
 
 def create_app(settings_override: Settings | None = None) -> FastAPI:
@@ -45,12 +63,15 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
         retrieval = RetrievalService(settings)
         await asyncio.to_thread(retrieval.initialize)
 
-        store = SessionStore(
-            path=settings.session_store_file,
-            max_sessions=settings.max_sessions,
-            max_messages=settings.max_messages_per_session,
-        )
-        worker = WorkerClient(settings)
+        store = make_store(settings)
+        if settings.environment == "production" and not settings.database_url:
+            logger.warning(
+                "KBN_DATABASE_URL is not set: conversations are kept on local disk and are "
+                "lost whenever this instance restarts or sleeps. Set a Postgres URL."
+            )
+        await _purge_once(store, settings.session_retention_days)
+        purge_task = asyncio.create_task(_retention_loop(store, settings.session_retention_days))
+        worker = make_worker(settings, ollama_cls=WorkerClient)
         worker_start_error: str | None = None
         if settings.start_worker:
             try:
@@ -59,8 +80,21 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
                 worker_start_error = str(exc)
                 logger.exception("Could not start the LLM worker at startup")
 
-        chat_service = ChatService(settings, store, retrieval, worker)
-        health_service = HealthService(settings, retrieval, worker)
+        chat_service = ChatService(
+            settings,
+            store,
+            retrieval,
+            worker,
+            budget=DailyBudget(settings.daily_llm_budget, per_key_max=settings.per_ip_daily_llm_calls),
+        )
+        mult = settings.rate_limit_ip_multiplier
+        app.state.chat_limiter = SlidingWindowLimiter(settings.rate_limit_per_minute, 60)
+        app.state.chat_limiter_ip = SlidingWindowLimiter(settings.rate_limit_per_minute * mult, 60)
+        app.state.session_limiter = SlidingWindowLimiter(settings.rate_limit_sessions_per_hour, 3600)
+        app.state.session_limiter_ip = SlidingWindowLimiter(
+            settings.rate_limit_sessions_per_hour * mult, 3600
+        )
+        health_service = HealthService(settings, retrieval, worker, store)
 
         app.state.settings = settings
         app.state.retrieval = retrieval
@@ -83,9 +117,13 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
             yield
         finally:
             logger.info("Shutting down %s", settings.app_name)
+            purge_task.cancel()
             await chat_service.shutdown()
             worker.stop()
             retrieval.close()
+            close = getattr(store, "close", None)
+            if close:
+                close()
 
     app = FastAPI(
         title=startup_settings.app_name,
@@ -136,6 +174,7 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
 
     @app.exception_handler(AppError)
     async def app_error_handler(request: Request, exc: AppError):
+        headers = {"Retry-After": str(exc.retry_after)} if hasattr(exc, "retry_after") else None
         return JSONResponse(
             status_code=exc.status_code,
             content={
@@ -145,6 +184,7 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
                     "details": jsonable_encoder(exc.details),
                 }
             },
+            headers=headers,
         )
 
     @app.exception_handler(RequestValidationError)

@@ -42,8 +42,8 @@ export function LoadingIndicator({
           </div>
 
           <p className="mt-3 text-xs leading-relaxed text-stone-500">
-            The private Qwen3:8B model is preparing a grounded answer. On CPU
-            this can take several minutes — the answer is saved when it finishes.
+            The assistant is preparing an answer from KBN University&apos;s
+            records. This usually takes a few seconds.
           </p>
         </div>
       </div>

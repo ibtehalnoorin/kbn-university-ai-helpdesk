@@ -1,0 +1,19 @@
+# Render blueprint: one free web service (API + built frontend), Groq for the LLM,
+# a free Neon Postgres for chats. Secrets are entered in the Render dashboard.
+services:
+  - type: web
+    name: kbn-helpdesk
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: KBN_LLM_PROVIDER
+        value: groq
+      - key: KBN_GROQ_API_KEY
+        sync: false
+      - key: KBN_DATABASE_URL
+        sync: false
+      - key: KBN_ENVIRONMENT
+        value: production
+      - key: KBN_TRUSTED_PROXY_HOPS
+        value: "1"

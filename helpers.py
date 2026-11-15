@@ -1,4 +1,9 @@
-from crawl4ai import AsyncWebCrawler
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # optional scraping dependency; only needed for type hints
+    from crawl4ai import AsyncWebCrawler
 import re
 
 

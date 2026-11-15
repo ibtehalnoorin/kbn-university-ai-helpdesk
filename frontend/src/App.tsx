@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BookOpenText, RefreshCw, ServerCrash } from "lucide-react";
-import { ApiError, api, isBusy, isTimeout } from "./api/client";
+import { ApiError, api, isBusy, isNotFound, isTimeout } from "./api/client";
 import type {
   HealthResponse,
   Message,
@@ -221,7 +221,7 @@ export default function App() {
         setError({
           title: "Could not open this conversation",
           message: messageOf(selectionError),
-          retry: () => void selectSession(id),
+          retry: isNotFound(selectionError) ? undefined : () => void selectSession(id),
         });
         setActiveId(null);
         activeIdRef.current = null;
@@ -270,7 +270,7 @@ export default function App() {
           setError({
             title: "The answer did not arrive",
             message:
-              "The local model did not finish in time. Please try the question again.",
+              "The assistant did not finish in time. Please try the question again.",
           });
           return;
         }
@@ -278,7 +278,16 @@ export default function App() {
         let detail: SessionDetail;
         try {
           detail = await api.getSession(sessionId);
-        } catch {
+        } catch (pollError) {
+          if (isNotFound(pollError)) {
+            // The conversation was removed (expired or server restarted): stop waiting.
+            setPending(null);
+            setError({
+              title: "This conversation is no longer available",
+              message: "It may have expired. Start a new conversation to continue.",
+            });
+            return;
+          }
           pollTimerRef.current = window.setTimeout(tick, POLL_INTERVAL_MS);
           return;
         }
@@ -389,18 +398,29 @@ export default function App() {
           }
           setPending(null);
           setDraft((current) => current || text);
-          setError({
-            title: "The message could not be answered",
-            message: messageOf(sendError),
-            retry: () => void sendMessage(text),
-          });
+          if (isNotFound(sendError)) {
+            // The conversation no longer exists on the server: begin a fresh one
+            // instead of offering a Retry that can never succeed.
+            writeActiveSession(null);
+            void createNew();
+            setError({
+              title: "That conversation expired",
+              message: "We started a new one. Please send your message again.",
+            });
+          } else {
+            setError({
+              title: "The message could not be answered",
+              message: messageOf(sendError),
+              retry: () => void sendMessage(text),
+            });
+          }
         }
       } finally {
         sendingRef.current = false;
         setSending(false);
       }
     },
-    [activeSession, draft, refreshHealth, refreshSessions, startPolling],
+    [activeSession, createNew, draft, refreshHealth, refreshSessions, startPolling],
   );
 
   const clearConversation = useCallback(async () => {
@@ -499,7 +519,7 @@ export default function App() {
           <h1 className="mt-4 font-display text-xl font-semibold text-kbn-950">
             KBN University Helpdesk
           </h1>
-          <p className="mt-1 text-sm text-stone-500">Connecting to the local service…</p>
+          <p className="mt-1 text-sm text-stone-500">Connecting to the helpdesk…</p>
         </div>
       </div>
     );

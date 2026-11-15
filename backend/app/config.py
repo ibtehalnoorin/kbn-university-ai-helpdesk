@@ -11,6 +11,8 @@ import sys
 from functools import lru_cache
 from pathlib import Path
 
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -42,7 +44,17 @@ class Settings(BaseSettings):
     # The protected processor.py hardcodes qwen3:8b. The worker entry point
     # overrides that runtime value from these settings without editing the file.
     llm_model: str = "qwen3:8b"
-    embedding_model: str = "nomic-embed-text"
+
+    # LLM provider. "ollama" keeps the original local CPU worker; "groq" calls the
+    # Groq OpenAI-compatible API (free tier) and is what production uses.
+    llm_provider: Literal["ollama", "groq"] = "ollama"
+    groq_api_key: str = ""
+    groq_model: str = "qwen/qwen3.8-27b"
+    groq_base_url: str = "https://api.groq.com/openai/v1"
+    groq_timeout_seconds: float = 30.0
+    groq_max_parallel: int = 8
+    embedding_provider: str = "onnx"
+    embedding_model: str = "BAAI/bge-small-en-v1.5"
     chroma_dir: str = "./local_vector_kb"
     collection_name: str = "local_research_kb"
     expected_indexed_chunks: int = 38
@@ -79,7 +91,24 @@ class Settings(BaseSettings):
     ollama_check_timeout_seconds: float = 8.0
 
     max_pending_requests: int = 16
-    max_sessions: int = 100
+
+    # Abuse protection (in-memory, single instance).
+    rate_limit_per_minute: int = 12
+    rate_limit_sessions_per_hour: int = 20
+    # Groq's free tier allows roughly 1K requests/day; stay under it. 0 = LLM off
+    # (fast-path and fixed fallback answers still work).
+    daily_llm_budget: int = 900
+    # One client address may use at most this many LLM answers per day, so one person
+    # (or script) cannot use up everyone's share.
+    per_ip_daily_llm_calls: int = 100
+    # Per-IP ceiling = per-visitor limit x this, so a campus sharing one address is fine
+    # but rotating anonymous ids cannot bypass the limit.
+    rate_limit_ip_multiplier: int = 10
+    # Number of reverse proxies (Render, Cloudflare...) that append to X-Forwarded-For.
+    trusted_proxy_hops: int = 1
+    # Global safety valve only (retention and rate limits bound growth); a low cap would
+    # lock every new visitor out once enough people had visited.
+    max_sessions: int = 100_000
     max_messages_per_session: int = 500
 
     enable_web_fallback: bool = False
@@ -92,6 +121,10 @@ class Settings(BaseSettings):
     )
 
     session_store_path: str = "backend/data/sessions.json"
+    # When set, chats are stored in Postgres (free Neon/Supabase) instead of the JSON file.
+    database_url: str = ""
+    session_retention_days: int = 30
+    database_connect_timeout_seconds: float = 5.0
     protected_manifest_path: str = "protected_files.sha256"
 
     # Tests can start the API without spawning the LLM worker.

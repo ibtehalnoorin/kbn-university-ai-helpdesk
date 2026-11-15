@@ -99,7 +99,10 @@ export interface HealthResponse {
   environment: string;
   timestamp: string;
   components: {
-    ollama: ComponentStatus & {
+    // Exactly one of ollama (local provider) or llm (hosted provider) is present.
+    llm?: ComponentStatus & { provider?: string; model?: string };
+    store?: ComponentStatus & { kind?: string };
+    ollama?: ComponentStatus & {
       latency_ms?: number;
       models?: string[];
       llm_model?: string;

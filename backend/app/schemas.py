@@ -56,11 +56,14 @@ class Message(BaseModel):
     cached: bool = False
 
 
+MAX_MESSAGE_CHARS = 1000
+
+
 class ChatRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     session_id: str = Field(min_length=8, max_length=80)
-    message: str = Field(min_length=1, max_length=4000)
+    message: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
 
     @field_validator("message")
     @classmethod

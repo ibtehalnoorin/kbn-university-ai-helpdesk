@@ -80,7 +80,7 @@ export function Composer({
               <p className="flex items-center gap-1.5 text-[0.65rem] text-stone-400">
                 <LockKeyhole className="h-3 w-3 shrink-0" aria-hidden="true" />
                 <span className="truncate">
-                  On-device model · answers grounded in KBN records
+                  AI assistant · answers grounded in KBN records
                 </span>
               </p>
               <p className="mt-0.5 hidden text-[0.62rem] text-stone-400 sm:block">
@@ -111,8 +111,7 @@ export function Composer({
 
         <p className="mt-2 text-center text-[0.62rem] leading-relaxed text-stone-400">
           The helpdesk never invents KBN University facts. Unverified information
-          is reported as unavailable. Local Qwen3:8B responses can take several
-          minutes.
+          is reported as unavailable. Please don&apos;t share personal details.
         </p>
       </form>
     </div>

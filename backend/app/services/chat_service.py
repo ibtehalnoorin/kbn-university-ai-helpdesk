@@ -13,6 +13,7 @@ from helpers import classify_intent
 
 from app.config import Settings
 from app.errors import (
+    DailyLimitError,
     RetrievalError,
     SessionBusyError,
     WorkerResultError,
@@ -29,6 +30,7 @@ from app.schemas import (
 from app.services.fast_answers import try_fast_answer
 from app.services.grounding import (
     FALLBACK_MESSAGE,
+    answer_uses_records,
     assess_retrieval,
     build_retrieval_query,
     grounding_policy,
@@ -40,6 +42,7 @@ from app.services.grounding import (
 )
 from app.services.retrieval import RetrievalResult, RetrievalService
 from app.services.session_store import SessionStore, new_message_id
+from app.services.rate_limit import current_client_key
 from app.services.worker_client import WorkerClient
 
 logger = logging.getLogger("kbn.chat")
@@ -103,7 +106,9 @@ class ChatService:
         store: SessionStore,
         retrieval: RetrievalService,
         worker: WorkerClient,
+        budget=None,
     ) -> None:
+        self.budget = budget
         self.settings = settings
         self.store = store
         self.retrieval = retrieval
@@ -113,6 +118,21 @@ class ChatService:
         self._background_tasks: set[asyncio.Task] = set()
         # Exact standalone questions only; follow-ups depend on session history.
         self._answer_cache: dict[str, tuple[float, dict]] = {}
+
+    def _submit(self, **kwargs):
+        """Submit to the LLM, spending one unit of the daily budget (fast paths never get here)."""
+        key = current_client_key.get()
+        if self.budget is not None and not self.budget.try_consume(key=key):
+            raise DailyLimitError(
+                "The assistant has reached its daily limit. Please try again tomorrow, "
+                "or contact the university office directly."
+            )
+        try:
+            return self.worker.submit(**kwargs)
+        except Exception:
+            if self.budget is not None:
+                self.budget.refund(key=key)  # nothing was sent to the model
+            raise
 
     def is_busy(self, session_id: str) -> bool:
         lock = self._locks.get(session_id)
@@ -257,7 +277,7 @@ class ChatService:
         persona, base_prompt = classify_intent(message)
         system_prompt = f"{base_prompt}\n\n{grounding_policy()}"
         worker_key = self.store.worker_key_for(session_id)
-        future = self.worker.submit(
+        future = self._submit(
             worker_key=worker_key,
             query=message,
             kb_knowledge=result.context,
@@ -314,7 +334,7 @@ class ChatService:
         persona, base_prompt = classify_intent(request.message)
         system_prompt = f"{base_prompt}\n\n{general_policy()}"
         worker_key = self.store.worker_key_for(request.session_id)
-        future = self.worker.submit(
+        future = self._submit(
             worker_key=worker_key,
             query=request.message,
             kb_knowledge="",
@@ -534,6 +554,15 @@ class ChatService:
                 verification = _verification("unavailable", reason)
                 final_sources = []
                 grounded = False
+            elif not answer_uses_records(answer, context, user_content):
+                # Passed the fact checks only because it makes no checkable claims
+                # (e.g. an off-topic follow-up). Do not present it as record-backed.
+                verification = _verification(
+                    "general_unverified",
+                    "The answer does not rely on the university records.",
+                )
+                final_sources = []
+                grounded = False
             else:
                 verification = _verification("verified_kb", reason)
                 final_sources = sources
@@ -634,7 +663,7 @@ class ChatService:
             "not answer the question, say so.\n"
         )
         worker_key = self.store.worker_key_for(request.session_id)
-        future = self.worker.submit(
+        future = self._submit(
             worker_key=worker_key,
             query=request.message,
             kb_knowledge="",
