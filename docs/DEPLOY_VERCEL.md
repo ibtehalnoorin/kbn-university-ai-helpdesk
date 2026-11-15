@@ -8,7 +8,7 @@ All three have free plans. Free-plan terms change, so re-check them before launc
 
 ```text
 Browser ──► Vercel CDN: React app (frontend/dist, built at deploy time)
-        └─► Python function (index.py → FastAPI): /chat, /sessions, /health
+        └─► Python function (asgi.py → FastAPI): /chat, /sessions, /health
               ├─ Groq (the AI)
               ├─ Neon Postgres: chats + shared rate-limit/budget counters
               └─ /tmp copy of the search index and embedding model (made on cold start)
@@ -42,11 +42,20 @@ so limits kept in each copy's memory would not add up. They live in the database
    Nothing else is required. `KBN_TRUSTED_PROXY_HOPS` defaults to `1`, which matches
    Vercel (it sets `X-Forwarded-For` to the visitor's address).
 3. Click **Deploy**. The build runs `backend/scripts/vercel_build.py`: it builds the React
-   app and downloads the embedding model (about 64 MB) into the deployment.
+   app and downloads the embedding model (about 65 MB, stored as plain files in `.embedding_model/`) into the deployment.
 
-If the build fails with "npm is not available", the build image has no Node. Build the
-site locally (`cd frontend && npm ci && npm run build`), commit `frontend/dist`
-(remove it from `.gitignore`), and redeploy.
+## If the build fails
+
+- **`LAMBDA_SIZE_EXCEEDED` (bundle over 500 MB).** The first real build hit this at 588.72 MB.
+  Causes and fixes already in the repo: the model's Hugging Face cache is symlinks that Vercel
+  counts once per link (now flattened to plain files), `node_modules` is deleted after the build,
+  and `pyproject.toml` excludes the unused Kubernetes client that ChromaDB pulls in (74 MB).
+  Expected size is now roughly 370-450 MB. If a future dependency pushes it over again, set the
+  project environment variable `VERCEL_SUPPORT_LARGE_FUNCTIONS=1` (beta, allows up to 5 GB) or
+  add `VERCEL_ANALYZE_BUILD_OUTPUT=1` to see which files are largest.
+- **"npm is not available".** Not seen on Vercel (its build image has Node). If it ever happens,
+  build locally (`cd frontend && npm ci && npm run build`), commit `frontend/dist`
+  (remove it from `.gitignore`), and redeploy.
 
 ## 3. Check it
 
@@ -82,13 +91,19 @@ set them temporarily in Vercel and redeploy, then remove them).
 | --- | --- |
 | Rotate the Groq key | Create a new key, update `KBN_GROQ_API_KEY` in Vercel, redeploy, delete the old key |
 | Switch the AI off in an emergency | Set `KBN_DAILY_LLM_BUDGET=0` and redeploy. Direct answers and the fixed "not in the records" reply still work |
-| Update the knowledge | Edit `knowledge_docs/`, run `python backend/scripts/reindex.py`, commit `local_vector_kb/`, redeploy |
+| Update the knowledge | Edit `knowledge_docs/`, run `python backend/scripts/reasgi.py`, commit `local_vector_kb/`, redeploy |
 | See errors | Vercel dashboard → Logs |
 
-## What was and was not tested before this guide
+## What was and was not tested
+
+Observed on a real Vercel build: Python 3.12 and `uv` install from `pyproject.toml`, Node and `npm`
+are available, the React app builds, the embedding model downloads. The only failure was the
+bundle size above.
 
 Tested locally: the full test suite (including a second "server copy" sharing limits through
-Postgres), Vercel's own local runtime (`vercel dev --local`), and the app started from a
-read-only copy of the project with `VERCEL=1` (the same shape as a Vercel function).
-**Not tested:** an actual Vercel deployment, Vercel's build image (Node availability,
-whether the downloaded model is bundled), real cold-start time, and Neon's pooler.
+Postgres and a run with the Kubernetes client blocked), Vercel's own local runtime
+(`vercel dev --local`, both as one project and as separate web/api services), and the app started
+from a read-only copy of the project with `VERCEL=1`.
+
+**Not yet tested:** a successful Vercel deployment, real cold-start time, Neon's pooler, and the
+real Groq model on Vercel.

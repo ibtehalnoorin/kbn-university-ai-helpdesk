@@ -61,12 +61,11 @@ def prepare_runtime(
     copied = _copy_once(project_root / "local_vector_kb", store)
     env["KBN_CHROMA_DIR"] = str(store)
 
-    bundled = project_root / ".fastembed_cache"
+    bundled = project_root / ".embedding_model"
     if bundled.exists():
-        # The model is only read, so use it in place. (Its Hugging Face-style cache is
-        # symlinks to one blob; copying followed them and tripled the size in /tmp.)
-        env["FASTEMBED_CACHE_PATH"] = str(bundled)
-        env["HF_HUB_OFFLINE"] = "1"  # never try to download or write lock files
+        # Plain files, only read: use them in place (no copy, no download, no writes).
+        env["KBN_EMBEDDING_MODEL_DIR"] = str(bundled)
+        env["HF_HUB_OFFLINE"] = "1"
         model_cache = bundled
     else:
         model_cache = scratch / "fastembed_cache"
