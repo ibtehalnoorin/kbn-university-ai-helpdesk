@@ -11,6 +11,8 @@ import sys
 from functools import lru_cache
 from pathlib import Path
 
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -42,6 +44,15 @@ class Settings(BaseSettings):
     # The protected processor.py hardcodes qwen3:8b. The worker entry point
     # overrides that runtime value from these settings without editing the file.
     llm_model: str = "qwen3:8b"
+
+    # LLM provider. "ollama" keeps the original local CPU worker; "groq" calls the
+    # Groq OpenAI-compatible API (free tier) and is what production uses.
+    llm_provider: Literal["ollama", "groq"] = "ollama"
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.1-8b-instant"
+    groq_base_url: str = "https://api.groq.com/openai/v1"
+    groq_timeout_seconds: float = 30.0
+    groq_max_parallel: int = 8
     embedding_model: str = "nomic-embed-text"
     chroma_dir: str = "./local_vector_kb"
     collection_name: str = "local_research_kb"
