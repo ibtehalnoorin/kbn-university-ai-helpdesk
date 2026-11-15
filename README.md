@@ -8,8 +8,9 @@ chat interface.
 
 Every university answer is checked against the retrieved records before it is returned.
 If the records do not support an answer, the app returns one fixed fallback sentence
-instead of guessing. The application runs entirely on the local machine and is **not a
-publicly hosted chatbot**.
+instead of guessing. It can run fully local (Ollama) or, for a public launch, on free
+hosted services (Groq for the model, Neon for chat storage); see
+[docs/DEPLOY.md](docs/DEPLOY.md).
 
 ---
 
@@ -54,7 +55,11 @@ embeddings, retrieval logic, knowledge documents or ChromaDB collection.
 - **Integrity checks** — `/health` verifies SHA-256 hashes of the protected modules on
   every request.
 - **Typed API and OpenAPI docs** — Pydantic v2 schemas plus `/docs` and `/openapi.json`.
-- **No external AI APIs** — no API keys, no cloud inference, no telemetry.
+- **Two run modes** — local (`KBN_LLM_PROVIDER=ollama`, no external services) or hosted
+  (`KBN_LLM_PROVIDER=groq`, free tier, answers in seconds, many users at once).
+- **Visitor privacy and abuse protection** — each browser sees only its own chats, chats
+  are deleted after 30 days, per-visitor rate limits and a daily LLM budget protect the
+  free quota.
 
 ---
 
@@ -161,7 +166,7 @@ are intentionally git-ignored and stay on the machine that created them.
 ### 1. Get the code
 
 ```powershell
-git clone https://github.com/<your-account>/kbn-university-ai-helpdesk.git
+git clone https://github.com/ibtehalnoorin/kbn-university-ai-helpdesk.git
 cd kbn-university-ai-helpdesk
 ```
 
@@ -183,7 +188,24 @@ python -m pip install --upgrade pip
 python -m pip install -r backend/requirements.txt
 ```
 
-### 3. Ollama setup
+### 3. Choose the model provider
+
+**Hosted (recommended for a public site; no Ollama needed):** get a free key at
+<https://console.groq.com> and set
+
+```bash
+export KBN_LLM_PROVIDER=groq
+export KBN_GROQ_API_KEY=...
+```
+
+Embeddings run in-process (ONNX, `BAAI/bge-small-en-v1.5`); the first start downloads
+the model (~70 MB). Skip step 3b below.
+
+**Local (fully offline):** use Ollama as described next. Set
+`KBN_EMBEDDING_PROVIDER=ollama`, `KBN_EMBEDDING_MODEL=nomic-embed-text`, then run
+`python backend/scripts/reindex.py` once so the vector store matches that embedder.
+
+### 3b. Ollama setup (local mode only)
 
 Install Ollama, start it, then pull the two models used by the project:
 
