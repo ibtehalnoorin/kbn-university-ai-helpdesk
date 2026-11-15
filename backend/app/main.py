@@ -27,6 +27,7 @@ from app.services.health_service import HealthService
 from app.services.retrieval import RetrievalService
 from app.services.session_store import SessionStore
 from app.services.worker_client import WorkerClient
+from app.services.worker_factory import make_worker
 
 logger = logging.getLogger("kbn.api")
 
@@ -50,7 +51,7 @@ def create_app(settings_override: Settings | None = None) -> FastAPI:
             max_sessions=settings.max_sessions,
             max_messages=settings.max_messages_per_session,
         )
-        worker = WorkerClient(settings)
+        worker = make_worker(settings, ollama_cls=WorkerClient)
         worker_start_error: str | None = None
         if settings.start_worker:
             try:

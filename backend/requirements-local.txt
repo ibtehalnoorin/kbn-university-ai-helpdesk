@@ -1,0 +1,3 @@
+# Optional extras for local development: web fallback and scraping (disabled by default).
+ddgs~=9.16.1
+crawl4ai>=0.9.5

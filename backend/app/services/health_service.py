@@ -61,6 +61,18 @@ async def check_ollama(settings: Settings) -> dict:
     }
 
 
+def check_groq(settings: Settings) -> dict:
+    """Config-only check: no network call, so /health never spends free-tier quota."""
+    has_key = bool(settings.groq_api_key)
+    return {
+        "provider": "groq",
+        "status": "ok" if has_key else "error",
+        "connected": has_key,
+        "model": settings.groq_model,
+        "detail": None if has_key else "KBN_GROQ_API_KEY is not set.",
+    }
+
+
 class HealthService:
     def __init__(
         self,
@@ -73,7 +85,12 @@ class HealthService:
         self.worker = worker
 
     async def check(self) -> HealthResponse:
-        ollama_task = check_ollama(self.settings)
+        use_groq = self.settings.llm_provider == "groq"
+
+        async def _llm_check() -> dict:
+            return check_groq(self.settings) if use_groq else await check_ollama(self.settings)
+
+        ollama_task = _llm_check()
         chroma_task = asyncio.to_thread(self.retrieval.health)
         integrity_task = asyncio.to_thread(
             verify_protected_manifest, self.settings.protected_manifest_file
@@ -83,6 +100,7 @@ class HealthService:
         )
         worker = self.worker.status()
 
+        llm_name = "llm" if use_groq else "ollama"
         ollama_ok = ollama.get("status") == "ok"
         chroma_ok = chromadb.get("status") == "ok"
         worker_ok = bool(worker.get("alive")) or not self.settings.start_worker
@@ -102,7 +120,7 @@ class HealthService:
             environment=self.settings.environment,
             timestamp=utc_now(),
             components={
-                "ollama": ollama,
+                llm_name: ollama,
                 "chromadb": chromadb,
                 "grounding": {
                     "status": "ok" if self.settings.strict_grounding else "degraded",
@@ -112,7 +130,10 @@ class HealthService:
             },
             worker=worker,
             configuration={
-                "llm_model": self.settings.llm_model,
+                "llm_provider": self.settings.llm_provider,
+                "llm_model": (
+                    self.settings.groq_model if use_groq else self.settings.llm_model
+                ),
                 "embedding_model": self.settings.embedding_model,
                 "chroma_path": str(self.settings.chroma_path),
                 "collection": self.settings.collection_name,
