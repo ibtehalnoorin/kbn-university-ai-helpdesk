@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
 import time
 
@@ -61,16 +62,45 @@ async def check_ollama(settings: Settings) -> dict:
     }
 
 
+GROQ_PROBE_TTL = 300  # seconds; /health pings must not hammer Groq
+GROQ_PROBE_RETRY = 30  # seconds before trying again after a network failure
+_groq_cache: dict[tuple[str, str], tuple[float, int | None]] = {}
+
+
+def probe_groq(settings: Settings) -> int | None:
+    """Ask Groq to list models: proves the key works without using chat quota. None = unreachable."""
+    try:
+        response = httpx.get(
+            f"{settings.groq_base_url.rstrip('/')}/models",
+            headers={"Authorization": f"Bearer {settings.groq_api_key}"},
+            timeout=5,
+        )
+        return response.status_code
+    except httpx.HTTPError:
+        return None
+
+
 def check_groq(settings: Settings) -> dict:
-    """Config-only check: no network call, so /health never spends free-tier quota."""
-    has_key = bool(settings.groq_api_key)
-    return {
-        "provider": "groq",
-        "status": "ok" if has_key else "error",
-        "connected": has_key,
-        "model": settings.groq_model,
-        "detail": None if has_key else "KBN_GROQ_API_KEY is not set.",
-    }
+    """Is a key set, and does Groq accept it? The answer is cached for a few minutes."""
+    base = {"provider": "groq", "model": settings.groq_model}
+    if not settings.groq_api_key:
+        return {**base, "status": "error", "connected": False, "verified": False,
+                "detail": "KBN_GROQ_API_KEY is not set."}
+    cache_key = (settings.groq_base_url, hashlib.sha256(settings.groq_api_key.encode()).hexdigest()[:16])
+    now = time.monotonic()
+    cached = _groq_cache.get(cache_key)
+    if cached and cached[0] > now:
+        code = cached[1]
+    else:
+        code = probe_groq(settings)
+        _groq_cache[cache_key] = (now + (GROQ_PROBE_TTL if code is not None else GROQ_PROBE_RETRY), code)
+    if code in (401, 403):
+        return {**base, "status": "error", "connected": False, "verified": False,
+                "detail": f"Groq rejected the API key (HTTP {code}). Create a new key and update KBN_GROQ_API_KEY."}
+    if code is None:
+        return {**base, "status": "ok", "connected": True, "verified": False,
+                "detail": "Could not reach Groq to verify the key right now."}
+    return {**base, "status": "ok", "connected": True, "verified": code == 200, "detail": None}
 
 
 class HealthService:
@@ -90,7 +120,9 @@ class HealthService:
         use_groq = self.settings.llm_provider == "groq"
 
         async def _llm_check() -> dict:
-            return check_groq(self.settings) if use_groq else await check_ollama(self.settings)
+            if use_groq:
+                return await asyncio.to_thread(check_groq, self.settings)
+            return await check_ollama(self.settings)
 
         ollama_task = _llm_check()
         chroma_task = asyncio.to_thread(self.retrieval.health)

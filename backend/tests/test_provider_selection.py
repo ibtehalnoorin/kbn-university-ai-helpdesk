@@ -42,6 +42,8 @@ def groq_app(tmp_path, monkeypatch):
         raise AssertionError("check_ollama called for the groq provider")
 
     monkeypatch.setattr(health_module, "check_ollama", forbidden)
+    health_module._groq_cache.clear()
+    monkeypatch.setattr(health_module, "probe_groq", lambda settings: 200)  # key accepted
 
     def build(**overrides):
         return TestClient(main_module.create_app(_groq_settings(tmp_path, **overrides)))
@@ -64,3 +66,33 @@ def test_health_degraded_when_groq_key_missing(groq_app):
         body = client.get("/health").json()
     assert body["status"] == "degraded"
     assert body["components"]["llm"]["status"] == "error"
+
+
+def test_health_reports_a_rejected_groq_key(groq_app, monkeypatch):
+    # /health used to say "ok" whenever a key was set, even a revoked one (live Groq answered 401).
+    monkeypatch.setattr(health_module, "probe_groq", lambda settings: 401)
+    with groq_app(groq_api_key="gsk_super_secret_value") as client:
+        response = client.get("/health")
+    body = response.json()
+    assert body["status"] == "degraded"
+    assert body["components"]["llm"]["status"] == "error"
+    assert "rejected" in body["components"]["llm"]["detail"].lower()
+    assert "gsk_super_secret_value" not in response.text
+
+
+def test_health_confirms_a_working_key_and_caches_the_probe(groq_app, monkeypatch):
+    calls = []
+    monkeypatch.setattr(health_module, "probe_groq", lambda settings: calls.append(1) or 200)
+    with groq_app() as client:
+        first = client.get("/health").json()
+        client.get("/health")
+        client.get("/health")
+    assert first["components"]["llm"]["verified"] is True
+    assert len(calls) == 1  # cached, so /health pings do not hammer Groq
+
+
+def test_health_stays_ok_when_groq_cannot_be_reached_to_verify(groq_app, monkeypatch):
+    monkeypatch.setattr(health_module, "probe_groq", lambda settings: None)  # network error
+    with groq_app() as client:
+        body = client.get("/health").json()
+    assert body["status"] == "ok" and body["components"]["llm"]["verified"] is False

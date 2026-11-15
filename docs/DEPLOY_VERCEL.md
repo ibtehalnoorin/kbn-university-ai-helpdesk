@@ -60,10 +60,28 @@ so limits kept in each copy's memory would not add up. They live in the database
 ## 3. Check it
 
 Open the deployment URL: the chat page should load and `/health` should show
-`"status": "ok"`. Then run the checks in `backend/scripts/verify_live.py` and
+`"status": "ok"`. `/health` also asks Groq whether the API key works (the answer is cached for 5 minutes,
+and listing models does not use chat quota): a revoked or mistyped key shows `"status": "degraded"` with
+"Groq rejected the API key". The address Vercel shows per deployment (`…-abc123.vercel.app`) can sit behind
+Vercel Authentication; the project's main address (`<project>.vercel.app`) is the public one. Then run the checks in `backend/scripts/verify_live.py` and
 `backend/scripts/load_smoke.py` against the URL (their docstrings explain the
 `KBN_RATE_LIMIT_*` settings they need on the server being tested; for a real deployment
 set them temporarily in Vercel and redeploy, then remove them).
+
+## Speed: put the function next to the database
+
+Every request makes a few database round trips. If the Vercel function and the Neon database are on
+different continents, each round trip adds 0.2-0.5 s (this was the cause of ~6 s chat replies on the
+first live deployment: the function ran in Washington D.C., the default, and the database elsewhere).
+
+1. In Neon, note the region of your project (for example "AWS Asia Pacific (Mumbai)").
+2. In Vercel: **Project Settings, Functions, Function Region** and choose the closest match
+   (Mumbai = `bom1`, N. Virginia = `iad1`, Frankfurt = `fra1`, Singapore = `sin1`). Redeploy.
+3. Pick the pair that is also close to most of your visitors.
+
+Round trips per operation after the code optimisations (measured through a proxy that adds 120 ms per
+round trip): a read costs 1, creating a chat 2, a direct-answer chat message about 5 (it was about 27).
+At a same-region latency of a few milliseconds that is well under a second.
 
 ## Things to know
 

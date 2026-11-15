@@ -143,7 +143,7 @@ class ChatService:
 
     # ------------------------------------------------------------------ public
     async def chat(self, request: ChatRequest) -> ChatResponse:
-        self.store.detail(request.session_id)  # 404 if missing
+        # Existence (404) is checked by the route's ownership check and by the history read below.
         lock = self._locks.setdefault(request.session_id, asyncio.Lock())
         if lock.locked() or request.session_id in self._inflight:
             raise SessionBusyError(
