@@ -79,3 +79,24 @@ def test_reindex_rebuilds_collection_idempotently(monkeypatch, tmp_path):
     assert kb.collection.count() == expected
     got = kb.collection.get(ids=["b_chunk_0"])
     assert got["metadatas"][0] == {"source": "b.md", "chunk_index": 0}
+
+
+def test_embed_loads_a_local_model_folder_when_configured(monkeypatch, tmp_path):
+    import fastembed
+
+    captured = {}
+
+    class FakeTextEmbedding:
+        def __init__(self, name, **kwargs):
+            captured.update(name=name, **kwargs)
+
+        def embed(self, texts):
+            return iter([[0.25, 0.5]])
+
+    monkeypatch.setattr(fastembed, "TextEmbedding", FakeTextEmbedding)
+    monkeypatch.setattr(embeddings, "_model", None)
+    monkeypatch.setenv("KBN_EMBEDDING_PROVIDER", "onnx")
+    monkeypatch.setenv("KBN_EMBEDDING_MODEL_DIR", str(tmp_path))
+    assert embeddings.embed("hi") == [0.25, 0.5]
+    assert captured["specific_model_path"] == str(tmp_path)
+    monkeypatch.setattr(embeddings, "_model", None)  # do not leak the fake into other tests

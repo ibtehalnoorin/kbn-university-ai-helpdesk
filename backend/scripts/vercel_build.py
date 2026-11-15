@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,16 +30,51 @@ def build_frontend() -> None:
         subprocess.run(command, cwd=ROOT / "frontend", check=True)
 
 
+def flatten_model(cache_dir: Path, dest: Path) -> Path:
+    """Copy a downloaded Hugging Face-style model into ``dest`` as plain files.
+
+    That cache stores each file once and links to it with symlinks, and Vercel counts every
+    link as a full copy (the 65 MB model became 192 MB and pushed the bundle past 500 MB).
+    """
+    snapshots = sorted(cache_dir.glob("models--*/snapshots/*"))
+    if not snapshots:
+        sys.exit(f"No model snapshot found under {cache_dir}")
+    if dest.exists():
+        shutil.rmtree(dest)
+    dest.mkdir(parents=True)
+    for item in snapshots[-1].iterdir():
+        if item.is_file():  # follows symlinks, so real bytes are written
+            shutil.copyfile(item, dest / item.name)
+    return dest
+
+
 def bundle_model() -> None:
-    """Download the embedding model into the project so cold starts do not fetch it."""
-    cache = ROOT / ".fastembed_cache"
-    os.environ["FASTEMBED_CACHE_PATH"] = str(cache)
+    """Download the embedding model once and keep it in the project as plain files."""
     from fastembed import TextEmbedding
 
-    TextEmbedding(MODEL)
-    print(f"Embedding model {MODEL} bundled in {cache}")
+    with tempfile.TemporaryDirectory() as tmp:
+        os.environ["FASTEMBED_CACHE_PATH"] = tmp
+        TextEmbedding(MODEL)
+        dest = flatten_model(Path(tmp), ROOT / ".embedding_model")
+    size = sum(p.stat().st_size for p in dest.iterdir()) / 1e6
+    print(f"Embedding model {MODEL} bundled in {dest} ({size:.0f} MB, plain files)")
+
+
+def remove_node_modules(root: Path) -> None:
+    """Build-only files must not end up in the function bundle."""
+    shutil.rmtree(root / "frontend" / "node_modules", ignore_errors=True)
+
+
+def main(argv: list[str] | None = None) -> None:
+    """No flag: do both. ``--model-only`` / ``--frontend-only`` for per-service builds."""
+    args = sys.argv[1:] if argv is None else argv
+    if "--model-only" not in args:
+        build_frontend()
+        if os.environ.get("VERCEL"):
+            remove_node_modules(ROOT)
+    if "--frontend-only" not in args:
+        bundle_model()
 
 
 if __name__ == "__main__":
-    build_frontend()
-    bundle_model()
+    main()

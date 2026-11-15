@@ -34,7 +34,10 @@ def _onnx_model():
             if _model is None:
                 from fastembed import TextEmbedding
 
-                _model = TextEmbedding(model_name())
+                # A bundled model folder (plain files) avoids any download or cache writes.
+                model_dir = os.environ.get("KBN_EMBEDDING_MODEL_DIR")
+                kwargs = {"specific_model_path": model_dir} if model_dir else {}
+                _model = TextEmbedding(model_name(), **kwargs)
     return _model
 
 

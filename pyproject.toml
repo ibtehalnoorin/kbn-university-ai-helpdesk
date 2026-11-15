@@ -8,7 +8,7 @@ dependencies = [
     "chromadb~=1.5.9",
     "ollama~=0.6.3",
     "fastapi>=0.115,<1",
-    "uvicorn[standard]>=0.30,<1",
+    "uvicorn>=0.30,<1",
     "httpx>=0.27,<1",
     "pydantic-settings>=2.4,<3",
     "fastembed>=0.5,<1",
@@ -16,4 +16,18 @@ dependencies = [
 ]
 
 [tool.vercel]
-entrypoint = "index:app"
+entrypoint = "asgi:app"
+
+# Not a library: stop setuptools from auto-discovering packages (the flat layout has several
+# top-level folders) when uv builds the project during `uv sync` on Vercel.
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = []
+
+[tool.uv]
+# chromadb pulls in the Kubernetes client (74 MB) that a local persistent store never uses.
+# Leaving it out keeps the function bundle under Vercel's 500 MB limit.
+exclude-dependencies = ["kubernetes", "durationpy", "websocket-client", "requests-oauthlib", "oauthlib"]
