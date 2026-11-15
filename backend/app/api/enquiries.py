@@ -62,9 +62,11 @@ async def list_enquiries(
     status_filter: str | None = Query(default=None, alias="status"),
     limit: int = Query(default=200, ge=1, le=500),
 ) -> dict:
-    token = request.app.state.settings.admin_token
+    settings = request.app.state.settings
+    # KBN_ADMIN_TOKEN if set, otherwise the CRON_SECRET the deployment already has.
+    token = settings.admin_token or settings.cron_secret
     if not token:
-        raise StaffViewDisabledError("Set KBN_ADMIN_TOKEN to enable the staff view.")
+        raise StaffViewDisabledError("Set KBN_ADMIN_TOKEN (or CRON_SECRET) to enable the staff view.")
     supplied = request.headers.get("authorization", "")
     if not hmac.compare_digest(supplied.encode(), f"Bearer {token}".encode()):
         raise StaffAuthError("Invalid staff credentials.")

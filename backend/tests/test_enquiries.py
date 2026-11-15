@@ -115,3 +115,19 @@ def test_old_enquiries_are_purged_after_the_retention_period(make_client):
         store._enquiries_by_id()[old["id"]]["created_at"] = (datetime.now(timezone.utc) - timedelta(days=45)).isoformat()
         assert store.purge_enquiries_older_than(30) == 1
         assert [e["name"] for e in store.list_enquiries()] == ["Asha Khan"]
+
+
+def test_staff_view_falls_back_to_the_existing_cron_secret_when_no_admin_token_is_set(make_client):
+    # So a deployment needs no extra secret: the same CRON_SECRET it already has opens the staff view.
+    bearer = {"Authorization": "Bearer the-existing-cron-secret-0123"}
+    with make_client(admin_token="", cron_secret="the-existing-cron-secret-0123") as client:
+        client.post("/enquiries", json=VALID, headers=CLIENT)
+        assert client.get("/internal/enquiries", headers=bearer).json()["count"] == 1
+        assert client.get("/internal/enquiries", headers={"Authorization": "Bearer wrong"}).status_code == 401
+        assert client.get("/internal/enquiries").status_code == 401
+
+
+def test_an_explicit_admin_token_wins_over_the_cron_secret(make_client):
+    with make_client(admin_token="staff-token-for-tests-0123", cron_secret="the-existing-cron-secret-0123") as client:
+        assert client.get("/internal/enquiries", headers=ADMIN).status_code == 200
+        assert client.get("/internal/enquiries", headers={"Authorization": "Bearer the-existing-cron-secret-0123"}).status_code == 401

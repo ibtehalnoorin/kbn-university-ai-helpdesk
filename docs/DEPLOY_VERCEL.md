@@ -84,7 +84,7 @@ set them temporarily in Vercel and redeploy, then remove them).
 
 | Variable | Purpose |
 | --- | --- |
-| `KBN_ADMIN_TOKEN` | Enables the staff view: `GET /internal/enquiries` with header `Authorization: Bearer <token>`. Without it the view is off |
+| `KBN_ADMIN_TOKEN` | Optional. Staff view: `GET /internal/enquiries` with header `Authorization: Bearer <token>`. If it is not set, the existing `CRON_SECRET` is accepted instead, so no extra secret is needed. With neither set, the view is off |
 | `KBN_ENQUIRY_WEBHOOK_URL` | Optional. Every enquiry is also POSTed as JSON to this URL (an email service, a Google Sheet via Apps Script or Zapier, Slack...). A failing webhook never loses the enquiry |
 | `KBN_RATE_LIMIT_ENQUIRIES_PER_HOUR` | Per visitor, default 5 |
 
